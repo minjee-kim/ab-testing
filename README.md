@@ -12,9 +12,9 @@ In this mini project, I will be analyzing three datasets:
 As recommended by the paper, "Datasets for Online Controlled Experiments" by Liu, Cardoso, Couturier, and McCoy. 
 
 Find the datasets here: 
-Cookie Cats: https://www.kaggle.com/datasets/marwandiab/cookie-catsdataset
-Udacity Free Trial Screener: https://github.com/nehal96/A-B-Testing-Udacity
-Upworthy Research Archive: https://www.kaggle.com/datasets/thomassshaw/the-upworthy-research-archive
+Cookie Cats: https://www.kaggle.com/datasets/marwandiab/cookie-catsdataset <br>
+Udacity Free Trial Screener: https://github.com/nehal96/A-B-Testing-Udacity <br>
+Upworthy Research Archive: https://www.kaggle.com/datasets/thomassshaw/the-upworthy-research-archive <br>
 
 
 ### Analysis 
