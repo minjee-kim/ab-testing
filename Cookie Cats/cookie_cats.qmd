@@ -5,39 +5,77 @@ editor: visual
 ---
 
 ## 1. Define the experiment and research question
-Cookie Cats is a mobile puzzle game developed by Tactile Entertainment. 
 
-As players progress through the game, they encounter gates that require them to either wait before continuing or make an in-app purchase to continue immediately. 
+Cookie Cats is a mobile puzzle game developed by Tactile Entertainment.
 
-In this **experiment**, players were randomly assigned to one of two versions of the game: 
- * The first gate placed at level 30
- * The first gate placed at level 40. 
- 
-Formally, the **research question** is to determine whether moving the first gate from level 30 to 40 helps improve player engagement and retention. 
+As players progress through the game, they encounter gates that require them to either wait before continuing or make an in-app purchase to continue immediately.
 
+In this **experiment**, players were randomly assigned to one of two versions of the game:
 
-## 2. Identify the treatment and control groups
+- The first gate placed at level 30
 
-Now, reading the data: 
+- The first gate placed at level 40.
+
+Formally, the **research question** is to determine whether moving the first gate from level 30 to 40 helps improve player engagement and retention.
+
+Reading the data:
 
 ```{r}
 data = read.csv("cookie_cats.csv")
 ```
 
-There are five variables in the dataset: 
-userid - a unique number that identifies each player.
-version - whether the player was put in the control group (gate_30 - a gate at level 30) or the group with the moved gate (gate_40 - a gate at level 40).
-sum_gamerounds - the number of game rounds played by the player during the first 14 days after install.
-retention_1 - did the player come back and play 1 day after installing?
-retention_7 - did the player come back and play 7 days after installing?
+There are five variables:
 
-```{r, echo=FALSE}
-str(data)
+- **userid** - (int) a unique number that identifies each player.
+
+- **version** - (gate_30/ gate_40) the version of the game assigned to the player:
+
+  - gate_30: the first gate is at level 30.
+
+  - gate_40: the first gate is at level 40.
+
+- **sum_gamerounds** - (int) the number of game rounds played by the player during the first 14 days after install.
+
+- **retention_1** - (True/False) did the player come back and play 1 day after installing?
+
+- **retention_7** - (True/False) did the player come back and play 7 days after installing?
+
+Since we want to know "whether moving the first gate from level 30 to 40 helps improve player engagement and retention", we will be examining the effect of **version** (explanatory) on the **retention** and **number of game rounds** (response).
+
+## 2. Identify the treatment and control groups
+
+The players were randomly assigned to one of two versions of the game
+
+- **Control group**: gate_30
+
+- **Treatment group**: gate_40
+
+```{r, echo = FALSE}
+table(data$version)
 ```
 
+Roughly the same amount of players were assigned to each group.
 
 ## 3. Define the relevant experiment metrics
+
+The outcomes available in the dataset measure two aspects of player behavior:
+
+- **1-day retention**: whether a player returns 1 day after installing the game.
+
+- **7-day retention**: whether a player returns 7 days after installing the game.
+
+- **Game rounds**: the total number of rounds played during the first 14 days.
+
+We will use these metrics to compare player behavior between the control and treatment groups.
+
 ## 4. Explore and check the experimental data
+
+```{r}
+
+```
+
 ## 5. Estimate and test the treatment effect
+
 ## 6. Interpret the results
+
 ## 7. Make a practical recommendation
