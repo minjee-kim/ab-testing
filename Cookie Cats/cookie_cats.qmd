@@ -1,0 +1,25 @@
+---
+title: "Cookie Cats A/B Testing"
+format: html
+editor: visual
+---
+
+## 1. Define the experiment and research question
+Cookie Cats is a mobile puzzle game developed by Tactile Entertainment. 
+
+As players progress through the game, they encounter gates that require them to either wait before continuing or make an in-app purchase to continue immediately. 
+
+In this **experiment**, players were randomly assigned to one of two versions of the game: 
+ * The first gate placed at level 30
+ * The first gate placed at level 40. 
+ 
+Formally, the **research question** is to determine whether moving the first gate from level 30 to 40 helps improve player engagement and retention. 
+
+
+
+## 2. Identify the treatment and control groups
+## 3. Define the relevant experiment metrics
+## 4. Explore and check the experimental data
+## 5. Estimate and test the treatment effect
+## 6. Interpret the results
+## 7. Make a practical recommendation
