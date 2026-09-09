@@ -1,7 +1,7 @@
 # A/B Testing
 This mini project explores the design and analysis of randomized A/B experiments in a product setting. 
 
-\textbf(Topics): Randomized experiments, treatment and control groups, choosing experiment metrics, hypothesis testing, confidence intervals, statistical power, minimum detectable effect, A/B test diagnostics
+Topics: Randomized experiments, treatment and control groups, choosing experiment metrics, hypothesis testing, confidence intervals, statistical power, minimum detectable effect, A/B test diagnostics
 
 
 ### Analysis 
