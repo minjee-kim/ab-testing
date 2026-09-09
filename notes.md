@@ -1,8 +1,8 @@
 
 ## 1. A/B Testing 
-Despite the word "testing," A/B testing refers to a randomized experimental design in which users are assigned to different versions of a product or experience. 
-Statistical tests such as t-test or z-test can then be used to analyze resulting outcomes. 
-A/B testing became especially common in user-experience (UX) research, because digital products allow large numbers of users to be randomized, exposed to different experiences, and measured efficiency. 
+Think of a traditional hypothesis testing problem. \\
+Suppose you want to know whether the average weight of cattle differs from 500kg. \\
+Then, with null: mu = 500, alternative: mu not= 500, you might use a one-sample t-test to test this hypothesis from your sample of cattle weights. 
 
 ### Resources: 
 https://www.statsig.com/perspectives/an-introduction-to-ab-testing
