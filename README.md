@@ -13,7 +13,7 @@ As recommended by the paper, "Datasets for Online Controlled Experiments" by Liu
 
 Find the datasets here: 
 Cookie Cats: https://www.kaggle.com/datasets/marwandiab/cookie-catsdataset <br>
-Udacity Free Trial Screener: https://github.com/nehal96/A-B-Testing-Udacity <br>
+Udacity Free Trial Screener: https://www.kaggle.com/datasets/purvanahar/udacity-free-trial-screener-model-analysis <br>
 Upworthy Research Archive: https://www.kaggle.com/datasets/thomassshaw/the-upworthy-research-archive <br>
 
 
