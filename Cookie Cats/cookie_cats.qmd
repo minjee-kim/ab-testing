@@ -70,9 +70,77 @@ We will use these metrics to compare player behavior between the control and tre
 
 ## 4. Explore and check the experimental data
 
-```{r}
+Before estimating the treatment effect, examine the quality and the structure of the data.
 
+**Dimension of the data**
+
+```{r}
+dim(data)
 ```
+
+The data contains 90189 rows with 5 variables.
+
+**Missing values**
+
+```{r}
+colSums(is.na(data))
+```
+
+None of the values are missing.
+
+**Duplicate players**
+
+```{r}
+sum(duplicated(data$userid))
+```
+
+No duplicated players
+
+**Variables**
+
+1.  Retention
+
+    ```{r}
+    table(data$retention_1)
+    table(data$retention_7)
+    ```
+
+    Roughly about half of the users returned on day 1, but most most users did not return on day 7.
+
+    78.6% of users who returned on day 7 also returned on day 1.
+
+    ```{r}
+    sum(
+      data$retention_1 == "True" &
+        data$retention_7 == "True"
+    )/sum(
+        data$retention_7 == "True"
+    )
+    ```
+
+2.  Game Rounds
+
+    ```{r}
+    summary(data$sum_gamerounds)
+    hist(data$sum_gamerounds)
+    ```
+
+    There seem to be some substantial skewness in the game rounds. The mean is much higher at 52 compared to the median at 16, implying an extreme right-skewness: while the middle 50% of the users played between 5\~50 rounds, a small number of players logged 2,000\~50,000 rounds.
+
+    ```{r}
+    head(data[order(data$sum_gamerounds, decreasing = TRUE), ], 5)
+    ```
+
+    Because this extreme value makes the raw distribution difficult to visualize, we can examine the distribution on a log scale:
+
+    ```{r}
+    hist(log(data$sum_gamerounds), 
+         breaks = 50, 
+         main = "Distribution of Game Rounds", 
+         xlab = "log(Game Rounds)" )
+    ```
+
+    Instead of removing the extreme observations, we will later examine whether they substantially influence the estimated treatment effect.
 
 ## 5. Estimate and test the treatment effect
 
