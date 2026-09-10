@@ -352,4 +352,80 @@ Because the distribution of game rounds is extremely right-skewed and contains a
 
 ## 6. Interpret the results
 
+Now, summarizing the estimated treatment effects, confidence intervals, and p-values for the three outcomes:
+
+```{r, echo = FALSE, warning=FALSE}
+results <- data.frame(Metric = c("1-day retention", "7-day retention", "Game rounds" ),
+                      Control = c(p_A_1, p_A_7, mean_A ),
+                      Treatment = c(p_B_1, p_B_7, mean_B ), 
+                      Effect = c(delta_1, delta_7, delta_rounds ), 
+                      CI_lower = c(ci_1[1], ci_7[1], rounds_test$conf.int[1] ), 
+                      CI_upper = c(ci_1[2], ci_7[2], rounds_test$conf.int[2] ), 
+                      p_value = c(test_1$p.value, test_7$p.value, rounds_test$p.value ))
+
+knitr::kable(
+  results,
+  digits = 4,
+  caption = "Estimated effects of moving the gate from level 30 to level 40"
+)
+```
+
+### 6.1 1-day retention
+
+The 1-day retention rate was approximately 44.82% for gate 30 and 44.23% for gate 40.
+
+The estimated treatment effect was $\hat{\Delta}_1 = -0.0059$, meaning there was a 0.59% decrease in 1-day retention.
+
+The two-sample proportion test gave $p = 0.074$ with 95% confidence interval, (-0.0124, 0.0006)
+
+Because the confidence interval contains zero and the p-value is greater than 0.05, **we do not have sufficient evidence to conclude that moving the gate affects 1-day retention.**
+
+However, the estimated effect is negative, meaning the observed data slightly favor keeping the gate at level 30.
+
+### 6.2 7-day retention
+
+The 7-day retention rate was approximately 19.02% for gate 30 and 18.20% for gate 40.
+
+The estimated treatment effect was $\hat{\Delta}_7 = -0.0082$ (a 0.82 percentage-point decrease) in 7-day retention.
+
+The approximate 95% confidence interval was (-0.0133, -0.0031), and the two-sample proportion test gave p-value of 0.0016.
+
+Because the confidence interval does not contain zero and the p-value is less than 0.05, **there is statistical evidence that moving the gate from level 30 to level 40 decreases 7-day retention**.
+
+Although the absolute decrease is 0.82 percentage points, relative to the gate-30 retention rate this represents approximately a 4.3% decrease in 7-day retention.
+
+### 6.3 Number of game rounds
+
+Players assigned to gate 30 played an average of approximately 52.46 rounds, while players assigned to gate 40 played an average of approximately 51.30 rounds.
+
+The estimated treatment effect was $\hat{\Delta}_{rounds} = -1.16$, meaning players assigned to gate 40 played approximately 1.16 fewer rounds on average.
+
+The 95% confidence interval was approximately (-3.72, 1.40) with p-value: 0.376.
+
+Because the confidence interval contains zero and the p-value is greater than 0.05, **there is not sufficient evidence that moving the gate affects the mean number of game rounds played.**
+
+The game-round distribution is also highly right-skewed and contains an extreme observation, so conclusions based on the mean should be interpreted cautiously.
+
+### Overall 
+
+The three outcomes do not provide evidence that moving the first gate from level 30 to level 40 improves player behavior.
+
+- There is no statistically significant difference in 1-day retention.
+
+- There is evidence of a decrease in 7-day retention when the gate is moved to level 40.
+
+- There is no statistically significant difference in the mean number of game rounds played.
+
+The clearest treatment effect is therefore seen in **7-day retention**, where players exposed to the gate at level 40 were less likely to return after seven days.
+
 ## 7. Make a practical recommendation
+
+Based on the results of this experiment, I would recommend **keeping the first gate at level 30 rather than moving it to level 40**.
+
+Moving the gate to level 40 did not produce a statistically detectable improvement in either 1-day retention or the number of game rounds played. More importantly, 7-day retention decreased by approximately **0.82 percentage points**, corresponding to about a **4.3% relative decrease** compared with the gate-30 group.
+
+Therefore, the experiment provides no evidence of a benefit from moving the gate and provides evidence of a negative effect on longer-term retention.
+
+One limitation is that a minimum practically important effect was not specified before the analysis. Therefore, while the decrease in 7-day retention is statistically significant, determining its exact business importance would require additional information about the value of player retention, revenue, and the costs or benefits associated with changing the gate location.
+
+Given the available outcomes, however, **gate 30 is the preferred version**.
