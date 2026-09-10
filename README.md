@@ -5,9 +5,9 @@ My personal notes on related concepts and methods are available in [notes.md](ht
 
 ### Overview
 In this mini project, I will be analyzing three datasets: 
-- "Cookie cats": a mobile gaming experiment [View Analysis](https://minjee-kim.github.io/ab-testing/Cookie%20Cats/) 
-- "Udacity Free Trial Screener": an online education experiment
-- "Upworthy Research Archive": a large collection of media and content experiments
+- "Cookie cats": a mobile gaming experiment -- [View Analysis](https://minjee-kim.github.io/ab-testing/Cookie%20Cats/) 
+- "Udacity Free Trial Screener": an online education experiment -- [View Analysis](https://github.com/minjee-kim/ab-testing/tree/main/Udacity%20Free%20Trial%20Screener) 
+- "Upworthy Research Archive": a large collection of media and content experiments -- [View Analysis](https://github.com/minjee-kim/ab-testing/tree/main/Upworthy%20Research%20Archive) 
 (As recommended in "Datasets for Online Controlled Experiments" by Liu, Cardoso, Couturier, and McCoy) <br>
 
 <u>Find the datasets here:<u> <br>
