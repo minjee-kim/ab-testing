@@ -135,13 +135,15 @@ A **standard error** measures the expected sampling variability of an estimator.
 
 For a difference between two independent proportions,
 
-$$SE(\hat{p}_B-\hat{p}_A)
+\`\`\`math
+SE(\\hat{p}\_B-\\hat{p}\_A)
 =
-\sqrt{
-\frac{\hat{p}_A(1-\hat{p}_A)}{n_A}
+\\sqrt{
+\\frac{\\hat{p}\_A(1-\\hat{p}\_A)}{n_A}
 +
-\frac{\hat{p}_B(1-\hat{p}_B)}{n_B}
-}$$
+\\frac{\\hat{p}\_B(1-\\hat{p}\_B)}{n_B}
+}
+\`\`\`
 
 Larger sample sizes generally produce smaller standard errors.
 
