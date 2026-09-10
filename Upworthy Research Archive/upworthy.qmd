@@ -15,12 +15,23 @@ The primary outcome is the **click-through rate (CTR)**:
 
 $$CTR = \frac{\text{clicks}}{\text{impressions}}$$
 
-This [dataset](https://www.kaggle.com/datasets/thomassshaw/the-upworthy-research-archive) differs from a traditional single A/B test because it contains thousands of separate experiments, and individual experiments may contain more than two treatment variants.
+Unlike the other two applications that observed single experiment, this [dataset](https://osf.io/jd64p/files/3vqmp) contains thousands of separate experiments, and individual experiments may contain more than two treatment variants.
 
 **Research question:**\
 How much do alternative headline and image packages affect click-through rates across Upworthy's randomized experiments?
 
 ## 2. Identify the treatment and control groups
+
+Begin by inspecting the data:
+
+```{r, echo = FALSE, warning = FALSE}
+library(tidyverse)
+library(broom)
+
+upworthy <- read.csv("clean-upworthy-archive.csv")
+summary(upworthy)
+
+```
 
 ## 3. Define the relevant experiment metrics
 
