@@ -2,6 +2,7 @@
 title: "Cookie Cats A/B Testing"
 format: html
 editor: visual
+output-file: index.html
 ---
 
 ## 1. Define the experiment and research question
@@ -143,6 +144,152 @@ No duplicated players
     Instead of removing the extreme observations, we will later examine whether they substantially influence the estimated treatment effect.
 
 ## 5. Estimate and test the treatment effect
+
+Because players were randomly assigned to gate 30 or gate 40, we can estimate the treatment effect by directly comparing outcomes between the two groups. Throughout the analysis:
+
+- A = gate 30 (control)
+
+- B = gate 40 (treatment)
+
+For each outcome, the treatment effect is defined as:
+
+$\Delta = \text{Outcome}_B - \text{Outcome}_A$
+
+A positive value of $\Delta$ favors gate 40, while a negative value favors gate 30.
+
+First, convert the retention variables to 0/1 indicators:
+
+```{r}
+data$retention_1_num <- as.integer(
+  tolower(as.character(data$retention_1)) == "true"
+)
+
+data$retention_7_num <- as.integer(
+  tolower(as.character(data$retention_7)) == "true"
+)
+
+n_A <- sum(data$version == "gate_30")
+n_B <- sum(data$version == "gate_40")
+```
+
+### 5.1 1-day Retention
+
+For 1-day retention, let $p_A$ be the probability that a player assigned to gate 30 returns after one day, and let $p_B$ be the corresponding probability for gate 40.
+
+The treatment effect is $$\Delta_1 = p_B - p_A$$
+
+We estimate these probabilities using the observed proportions in each group.
+
+```{r}
+p_A_1 <- mean( data$retention_1_num[data$version == "gate_30"] ) 
+p_B_1 <- mean( data$retention_1_num[data$version == "gate_40"] ) 
+delta_1 <- p_B_1 - p_A_1 
+c( control_rate = p_A_1, treatment_rate = p_B_1, treatment_effect = delta_1 )
+```
+
+The hypotheses are:
+
+$$H_0: p_B - p_A = 0 \\
+H_A: p_B - p_A \neq 0$$
+
+The standard error of the estimated difference in proportions is:
+
+```{r}
+se_1 <- sqrt( p_A_1 * (1 - p_A_1) / n_A + p_B_1 * (1 - p_B_1) / n_B ) 
+se_1
+```
+
+An approximate 95% confidence interval for the treatment effect is:
+
+```{r}
+ci_1 <- delta_1 + c(-1, 1) * qnorm(0.975) * se_1 
+ci_1
+```
+
+Finally, conduct a two-sample proportion test.
+
+```{r}
+test_1 <- prop.test(x = c( sum(data$retention_1_num[data$version == "gate_40"]), 
+                           sum(data$retention_1_num[data$version == "gate_30"]) ),
+                    n = c(n_B, n_A), correct = FALSE ) 
+test_1
+```
+
+Here, gate 40 is entered first and gate 30 second so that the estimated difference corresponds to treatment minus control.
+
+### 5.2 7-day Retention
+
+For 7-day retention, let
+
+$p_A = P(\text{retained at day 7} \mid \text{gate 30})$ and $p_B = P(\text{retained at day 7} \mid \text{gate 40})$,
+
+where gate 30 is the control group and gate 40 is the treatment group.
+
+The treatment effect of interest is the difference in 7-day retention probabilities: $\Delta = p_B - p_A$
+
+Therefore:
+
+- $\Delta >0$: moving the gate to level 40 increases 7-day retention.
+
+- $\Delta < 0$: moving the gate to level 40 decreases 7-day retention.
+
+- $\Delta = 0$: moving the gate has no effect on 7-day retention.
+
+Because the true population probabilities $p_A$ and $p_B$are unknown, we will estimate them using the observed retention proportions in the two groups.
+
+```{r}
+p_A_7 <- mean(
+  data$retention_7_num[data$version == "gate_30"]
+)
+
+p_B_7 <- mean(
+  data$retention_7_num[data$version == "gate_40"]
+)
+
+delta_7 <- p_B_7 - p_A_7
+
+c(
+  control_rate = p_A_7,
+  treatment_rate = p_B_7,
+  treatment_effect = delta_7
+)
+```
+
+The hypotheses are (same as day-1 retention):
+
+$$H_0: p_B - p_A = 0 \\
+H_A: p_B - p_A \neq 0$$
+
+Calculate the standard error:
+
+```{r}
+se_7 <- sqrt(
+  p_A_7 * (1 - p_A_7) / n_A +
+    p_B_7 * (1 - p_B_7) / n_B
+)
+
+se_7
+```
+
+Construct an approximate 95% confidence interval:
+
+```{r}
+ci_7 <- delta_7 +
+  c(-1, 1) * qnorm(0.975) * se_7
+
+ci_7
+```
+
+Then perform the two-sample proportion test:
+
+```{r}
+test_7 <- prop.test(x = c( sum(data$retention_7_num[data$version == "gate_40"]), 
+                           sum(data$retention_7_num[data$version == "gate_30"]) ), 
+                    n = c(n_B, n_A), correct = FALSE ) 
+test_7
+```
+
+### 5.3 Number of game rounds
 
 ## 6. Interpret the results
 
