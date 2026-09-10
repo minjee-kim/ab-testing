@@ -7,7 +7,18 @@ output: index.html
 
 ## 1. Define the experiment and research question
 
-The Upworthy Research Archive is an open dataset of thousands of A/B tests of headlines conducted by Upworthy from January 2013 to April 2015. I transform this dataset into rows where each row represents a comparison between a single pair of A and B variants. The probability that variant A is greater than B is calculated using the click rate.
+[Upworthy](#0) was a digital media publisher (from January 2013 to April 2015) that routinely used randomized experiments to test different ways of presenting its articles.
+
+For each experiment, users visiting the Upworthy website were randomly assigned to see one of several **packages**, where each package consisted of a headline and image combination. Upworthy recorded the number of users who were shown each package (`impressions`) and the number who selected it (`clicks`).
+
+The primary outcome is the **click-through rate (CTR)**:
+
+$$CTR = \frac{\text{clicks}}{\text{impressions}}$$
+
+This [dataset](https://www.kaggle.com/datasets/thomassshaw/the-upworthy-research-archive) differs from a traditional single A/B test because it contains thousands of separate experiments, and individual experiments may contain more than two treatment variants.
+
+**Research question:**\
+How much do alternative headline and image packages affect click-through rates across Upworthy's randomized experiments?
 
 ## 2. Identify the treatment and control groups
 
