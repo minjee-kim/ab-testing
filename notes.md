@@ -135,15 +135,13 @@ A **standard error** measures the expected sampling variability of an estimator.
 
 For a difference between two independent proportions,
 
-$$
-SE(\hat{p}_B-\hat{p}_A)
+$$SE(\hat{p}_B-\hat{p}_A)
 =
 \sqrt{
 \frac{\hat{p}_A(1-\hat{p}_A)}{n_A}
 +
 \frac{\hat{p}_B(1-\hat{p}_B)}{n_B}
-}
-$$
+}$$
 
 Larger sample sizes generally produce smaller standard errors.
 
@@ -187,12 +185,12 @@ A test statistic compares the observed effect with the amount of variation expec
 
 In general,
 
-$$
+``` math
 \text{Test statistic}
 =
 \frac{\text{Observed effect} - \text{Effect under }H_0}
 {\text{Standard error}}
-$$
+```
 
 A treatment effect that is large relative to its standard error provides stronger evidence against the null hypothesis.
 
