@@ -3,7 +3,7 @@ The goal of this mini project is to learn how to carry out an A/B testing. <br>
 My personal notes on related concepts and methods are available in "notes.md". 
 
 ### Overview
-(As recommended by the paper, "Datasets for Online Controlled Experiments" by Liu, Cardoso, Couturier, and McCoy)
+(As recommended by the paper, "Datasets for Online Controlled Experiments" by Liu, Cardoso, Couturier, and McCoy) <br>
 In this mini project, I will be analyzing three datasets: 
 - "Cookie cats": a mobile gaming experiment (https://minjee-kim.github.io/ab-testing/Cookie%20Cats/) 
 - "Udacity Free Trial Screener": an online education experiment
