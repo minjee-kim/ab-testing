@@ -9,7 +9,7 @@ In this mini project, I will be analyzing three datasets:
 - "Udacity Free Trial Screener": an online education experiment
 - "Upworthy Research Archive": a large collection of media and content experiments
 
-<u> Find the datasets here: <u> <br>
+<u>Find the datasets here:<u> <br>
 Cookie Cats: https://www.kaggle.com/datasets/marwandiab/cookie-catsdataset <br>
 Udacity Free Trial Screener: https://www.kaggle.com/datasets/purvanahar/udacity-free-trial-screener-model-analysis <br>
 Upworthy Research Archive: https://www.kaggle.com/datasets/thomassshaw/the-upworthy-research-archive <br>
