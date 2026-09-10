@@ -1,7 +1,6 @@
 # A/B Testing
 The goal of this mini project is to learn how to carry out an A/B testing. 
-
-My personal notes on A/B testing concepts and methods are available in "notes.md". 
+My personal notes on related concepts and methods are available in "notes.md". 
 
 ### Overview
 In this mini project, I will be analyzing three datasets: 
