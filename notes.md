@@ -185,10 +185,10 @@ A test statistic compares the observed effect with the amount of variation expec
 
 In general,
 
-$$\text{Test statistic}
+$$ \text{Test statistic}
 =
 \frac{\text{Observed effect} - \text{Effect under }H_0}
-{\text{Standard error}}.$$
+{\text{Standard error}}. $$
 
 A treatment effect that is large relative to its standard error provides stronger evidence against the null hypothesis.
 
