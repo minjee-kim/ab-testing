@@ -5,7 +5,7 @@ My personal notes on A/B testing concepts and methods are available in "notes.md
 
 ### Overview
 In this mini project, I will be analyzing three datasets: 
-- "Cookie cats": a mobile gaming experiment
+- "Cookie cats": a mobile gaming experiment (https://minjee-kim.github.io/ab-testing/Cookie%20Cats/) 
 - "Udacity Free Trial Screener": an online education experiment
 - "Upworthy Research Archive": a large collection of media and content experiments
 
