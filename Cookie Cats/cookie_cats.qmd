@@ -291,6 +291,65 @@ test_7
 
 ### 5.3 Number of game rounds
 
+The number of game rounds is a quantitative outcome rather than a binary outcome.
+
+Let $\mu_A$ represent the mean number of game rounds for players assigned to gate 30 and $\mu_B$ represent the mean for players assigned to gate 40.
+
+The treatment effect is:
+
+$$\Delta_{\text{rounds}} = \mu_B - \mu_A$$
+
+Estimate the group means and treatment effect:
+
+```{r}
+mean_A <- mean(
+  data$sum_gamerounds[data$version == "gate_30"]
+)
+
+mean_B <- mean(
+  data$sum_gamerounds[data$version == "gate_40"]
+)
+
+delta_rounds <- mean_B - mean_A
+
+c(
+  control_mean = mean_A,
+  treatment_mean = mean_B,
+  treatment_effect = delta_rounds
+)
+```
+
+The hypotheses are:
+
+$$H_0: \mu_B - \mu_A = 0 \\
+H_A: \mu_B - \mu_A \neq 0$$
+
+Since the population variances are unknown and must be estimated from the sample, we can use a two sample t-test for unequal variance (aka. Welch two-sample t-test).
+
+The main difference between Welch's t-test and the equal-variance version of the two-sample t-test is the assumption about the two population variances:
+
+- The equal-variance t-test assumes that both groups have the same population variance.
+
+- Welch's t-test estimates the variance separately for each group and does not assume that the variances are equal.
+
+Both tests compare the difference between two sample means with the uncertainty in that difference. Welch's test is generally the safer default because it remains appropriate when the groups have different variances or different sample sizes. It is not a z-test, because the population variances are unknown and must be estimated from the data.
+
+In practice, this is done by calling a standard t.test in R with `var.equal = FALSE`:
+
+```{r}
+rounds_test <- t.test(
+  data$sum_gamerounds[data$version == "gate_40"],
+  data$sum_gamerounds[data$version == "gate_30"],
+  alternative = "two.sided",
+  var.equal = FALSE
+)
+rounds_test
+```
+
+The confidence interval reported by `t.test()` corresponds to the difference, $\mu_B - \mu_A$, where $\mu_B$ is the mean number of game rounds for gate 40 and $\mu_A$ is the mean number of game rounds for gate 30.
+
+Because the distribution of game rounds is extremely right-skewed and contains an unusually large observation, the difference in means should be interpreted with some caution. The primary analysis will retain all observations, but we can also conduct a sensitivity analysis to determine how strongly the extreme observation affects the result.
+
 ## 6. Interpret the results
 
 ## 7. Make a practical recommendation
