@@ -13,7 +13,7 @@ In this mini project, I will be analyzing three datasets:
 <u>Find the datasets here:<u> <br>
 Cookie Cats: https://www.kaggle.com/datasets/marwandiab/cookie-catsdataset <br>
 Udacity Free Trial Screener: https://www.kaggle.com/datasets/purvanahar/udacity-free-trial-screener-model-analysis <br>
-Upworthy Research Archive: [https://www.kaggle.com/datasets/thomassshaw/the-upworthy-research-archive](https://osf.io/jd64p/overview) <br>
+Upworthy Research Archive: https://osf.io/jd64p/overview <br>
 
 
 ### Analysis 
