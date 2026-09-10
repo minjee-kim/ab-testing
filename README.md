@@ -3,14 +3,13 @@ The goal of this mini project is to learn how to carry out an A/B testing. <br>
 My personal notes on related concepts and methods are available in "notes.md". 
 
 ### Overview
+(As recommended by the paper, "Datasets for Online Controlled Experiments" by Liu, Cardoso, Couturier, and McCoy)
 In this mini project, I will be analyzing three datasets: 
 - "Cookie cats": a mobile gaming experiment (https://minjee-kim.github.io/ab-testing/Cookie%20Cats/) 
 - "Udacity Free Trial Screener": an online education experiment
 - "Upworthy Research Archive": a large collection of media and content experiments
 
-As recommended by the paper, "Datasets for Online Controlled Experiments" by Liu, Cardoso, Couturier, and McCoy. 
-
-Find the datasets here: 
+Find the datasets here: <br>
 Cookie Cats: https://www.kaggle.com/datasets/marwandiab/cookie-catsdataset <br>
 Udacity Free Trial Screener: https://www.kaggle.com/datasets/purvanahar/udacity-free-trial-screener-model-analysis <br>
 Upworthy Research Archive: https://www.kaggle.com/datasets/thomassshaw/the-upworthy-research-archive <br>
