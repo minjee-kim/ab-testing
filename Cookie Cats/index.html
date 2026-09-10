@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Cookie Cats A/B Testing</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="cookie_cats_files/libs/clipboard/clipboard.min.js"></script>
+<script src="cookie_cats_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="cookie_cats_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="cookie_cats_files/libs/quarto-html/popper.min.js"></script>
+<script src="cookie_cats_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="cookie_cats_files/libs/quarto-html/anchor.min.js"></script>
+<link href="cookie_cats_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="cookie_cats_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="cookie_cats_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="cookie_cats_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="cookie_cats_files/libs/bootstrap/bootstrap-138a6193a3bd40baf1e627da441a4734.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Cookie Cats A/B Testing</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="define-the-experiment-and-research-question" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-experiment-and-research-question">1. Define the experiment and research question</h2>
+<p>Cookie Cats is a mobile puzzle game developed by Tactile Entertainment.</p>
+<p>As players progress through the game, they encounter gates that require them to either wait before continuing or make an in-app purchase to continue immediately.</p>
+<p>In this <strong>experiment</strong>, players were randomly assigned to one of two versions of the game:</p>
+<ul>
+<li><p>The first gate placed at level 30</p></li>
+<li><p>The first gate placed at level 40.</p></li>
+</ul>
+<p>Formally, the <strong>research question</strong> is to determine whether moving the first gate from level 30 to 40 helps improve player engagement and retention.</p>
+<p>Reading the data:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="st">"cookie_cats.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>There are five variables:</p>
+<ul>
+<li><p><strong>userid</strong> - (int) a unique number that identifies each player.</p></li>
+<li><p><strong>version</strong> - (gate_30/ gate_40) the version of the game assigned to the player:</p>
+<ul>
+<li><p>gate_30: the first gate is at level 30.</p></li>
+<li><p>gate_40: the first gate is at level 40.</p></li>
+</ul></li>
+<li><p><strong>sum_gamerounds</strong> - (int) the number of game rounds played by the player during the first 14 days after install.</p></li>
+<li><p><strong>retention_1</strong> - (True/False) did the player come back and play 1 day after installing?</p></li>
+<li><p><strong>retention_7</strong> - (True/False) did the player come back and play 7 days after installing?</p></li>
+</ul>
+<p>Since we want to know “whether moving the first gate from level 30 to 40 helps improve player engagement and retention”, we will be examining the effect of <strong>version</strong> (explanatory) on the <strong>retention</strong> and <strong>number of game rounds</strong> (response).</p>
+</section>
+<section id="identify-the-treatment-and-control-groups" class="level2">
+<h2 class="anchored" data-anchor-id="identify-the-treatment-and-control-groups">2. Identify the treatment and control groups</h2>
+<p>The players were randomly assigned to one of two versions of the game</p>
+<ul>
+<li><p><strong>Control group</strong>: gate_30</p></li>
+<li><p><strong>Treatment group</strong>: gate_40</p></li>
+</ul>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+gate_30 gate_40 
+  44700   45489 </code></pre>
+</div>
+</div>
+<p>Roughly the same amount of players were assigned to each group.</p>
+</section>
+<section id="define-the-relevant-experiment-metrics" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-relevant-experiment-metrics">3. Define the relevant experiment metrics</h2>
+<p>The outcomes available in the dataset measure two aspects of player behavior:</p>
+<ul>
+<li><p><strong>1-day retention</strong>: whether a player returns 1 day after installing the game.</p></li>
+<li><p><strong>7-day retention</strong>: whether a player returns 7 days after installing the game.</p></li>
+<li><p><strong>Game rounds</strong>: the total number of rounds played during the first 14 days.</p></li>
+</ul>
+<p>We will use these metrics to compare player behavior between the control and treatment groups.</p>
+</section>
+<section id="explore-and-check-the-experimental-data" class="level2">
+<h2 class="anchored" data-anchor-id="explore-and-check-the-experimental-data">4. Explore and check the experimental data</h2>
+<p>Before estimating the treatment effect, examine the quality and the structure of the data.</p>
+<p><strong>Dimension of the data</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 90189     5</code></pre>
+</div>
+</div>
+<p>The data contains 90189 rows with 5 variables.</p>
+<p><strong>Missing values</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(data))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        userid        version sum_gamerounds    retention_1    retention_7 
+             0              0              0              0              0 </code></pre>
+</div>
+</div>
+<p>None of the values are missing.</p>
+<p><strong>Duplicate players</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">duplicated</span>(data<span class="sc">$</span>userid))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+</div>
+<p>No duplicated players</p>
+<p><strong>Variables</strong></p>
+<ol type="1">
+<li><p>Retention</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(data<span class="sc">$</span>retention_1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+False  True 
+50036 40153 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(data<span class="sc">$</span>retention_7)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+False  True 
+73408 16781 </code></pre>
+</div>
+</div>
+<p>Roughly about half of the users returned on day 1, but most most users did not return on day 7.</p>
+<p>78.6% of users who returned on day 7 also returned on day 1.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>retention_1 <span class="sc">==</span> <span class="st">"True"</span> <span class="sc">&amp;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    data<span class="sc">$</span>retention_7 <span class="sc">==</span> <span class="st">"True"</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>)<span class="sc">/</span><span class="fu">sum</span>(</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    data<span class="sc">$</span>retention_7 <span class="sc">==</span> <span class="st">"True"</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7855313</code></pre>
+</div>
+</div></li>
+<li><p>Game Rounds</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(data<span class="sc">$</span>sum_gamerounds)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+    0.00     5.00    16.00    51.87    51.00 49854.00 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(data<span class="sc">$</span>sum_gamerounds)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cookie_cats_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>There seem to be some substantial skewness in the game rounds. The mean is much higher at 52 compared to the median at 16, implying an extreme right-skewness: while the middle 50% of the users played between 5~50 rounds, a small number of players logged 2,000~50,000 rounds.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(data[<span class="fu">order</span>(data<span class="sc">$</span>sum_gamerounds, <span class="at">decreasing =</span> <span class="cn">TRUE</span>), ], <span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       userid version sum_gamerounds retention_1 retention_7
+57703 6390605 gate_30          49854       False        True
+7913   871500 gate_30           2961        True        True
+29418 3271615 gate_40           2640        True       False
+43672 4832608 gate_30           2438        True        True
+48189 5346171 gate_40           2294        True        True</code></pre>
+</div>
+</div>
+<p>Because this extreme value makes the raw distribution difficult to visualize, we can examine the distribution on a log scale:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(<span class="fu">log</span>(data<span class="sc">$</span>sum_gamerounds), </span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> <span class="dv">50</span>, </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Distribution of Game Rounds"</span>, </span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"log(Game Rounds)"</span> )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="cookie_cats_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Instead of removing the extreme observations, we will later examine whether they substantially influence the estimated treatment effect.</p></li>
+</ol>
+</section>
+<section id="estimate-and-test-the-treatment-effect" class="level2">
+<h2 class="anchored" data-anchor-id="estimate-and-test-the-treatment-effect">5. Estimate and test the treatment effect</h2>
+<p>Because players were randomly assigned to gate 30 or gate 40, we can estimate the treatment effect by directly comparing outcomes between the two groups. Throughout the analysis:</p>
+<ul>
+<li><p>A = gate 30 (control)</p></li>
+<li><p>B = gate 40 (treatment)</p></li>
+</ul>
+<p>For each outcome, the treatment effect is defined as:</p>
+<p><span class="math inline">\(\Delta = \text{Outcome}_B - \text{Outcome}_A\)</span></p>
+<p>A positive value of <span class="math inline">\(\Delta\)</span> favors gate 40, while a negative value favors gate 30.</p>
+<p>First, convert the retention variables to 0/1 indicators:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>retention_1_num <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tolower</span>(<span class="fu">as.character</span>(data<span class="sc">$</span>retention_1)) <span class="sc">==</span> <span class="st">"true"</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>retention_7_num <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tolower</span>(<span class="fu">as.character</span>(data<span class="sc">$</span>retention_7)) <span class="sc">==</span> <span class="st">"true"</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>n_A <span class="ot">&lt;-</span> <span class="fu">sum</span>(data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_30"</span>)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>n_B <span class="ot">&lt;-</span> <span class="fu">sum</span>(data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_40"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="day-retention" class="level3">
+<h3 class="anchored" data-anchor-id="day-retention">5.1 1-day Retention</h3>
+<p>For 1-day retention, let <span class="math inline">\(p_A\)</span> be the probability that a player assigned to gate 30 returns after one day, and let <span class="math inline">\(p_B\)</span> be the corresponding probability for gate 40.</p>
+<p>The treatment effect is <span class="math display">\[\Delta_1 = p_B - p_A\]</span></p>
+<p>We estimate these probabilities using the observed proportions in each group.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>p_A_1 <span class="ot">&lt;-</span> <span class="fu">mean</span>( data<span class="sc">$</span>retention_1_num[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_30"</span>] ) </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>p_B_1 <span class="ot">&lt;-</span> <span class="fu">mean</span>( data<span class="sc">$</span>retention_1_num[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_40"</span>] ) </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>delta_1 <span class="ot">&lt;-</span> p_B_1 <span class="sc">-</span> p_A_1 </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>( <span class="at">control_rate =</span> p_A_1, <span class="at">treatment_rate =</span> p_B_1, <span class="at">treatment_effect =</span> delta_1 )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    control_rate   treatment_rate treatment_effect 
+      0.44818792       0.44228275      -0.00590517 </code></pre>
+</div>
+</div>
+<p>The hypotheses are:</p>
+<p><span class="math display">\[H_0: p_B - p_A = 0 \\
+H_A: p_B - p_A \neq 0\]</span></p>
+<p>The standard error of the estimated difference in proportions is:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>se_1 <span class="ot">&lt;-</span> <span class="fu">sqrt</span>( p_A_1 <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> p_A_1) <span class="sc">/</span> n_A <span class="sc">+</span> p_B_1 <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> p_B_1) <span class="sc">/</span> n_B ) </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>se_1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.003309892</code></pre>
+</div>
+</div>
+<p>An approximate 95% confidence interval for the treatment effect is:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>ci_1 <span class="ot">&lt;-</span> delta_1 <span class="sc">+</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>) <span class="sc">*</span> <span class="fu">qnorm</span>(<span class="fl">0.975</span>) <span class="sc">*</span> se_1 </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>ci_1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -0.0123924394  0.0005820999</code></pre>
+</div>
+</div>
+<p>Finally, conduct a two-sample proportion test.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>test_1 <span class="ot">&lt;-</span> <span class="fu">prop.test</span>(<span class="at">x =</span> <span class="fu">c</span>( <span class="fu">sum</span>(data<span class="sc">$</span>retention_1_num[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_40"</span>]), </span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>                           <span class="fu">sum</span>(data<span class="sc">$</span>retention_1_num[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_30"</span>]) ),</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">n =</span> <span class="fu">c</span>(n_B, n_A), <span class="at">correct =</span> <span class="cn">FALSE</span> ) </span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>test_1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    2-sample test for equality of proportions without continuity correction
+
+data:  c(sum(data$retention_1_num[data$version == "gate_40"]), sum(data$retention_1_num[data$version == "gate_30"])) out of c(n_B, n_A)
+X-squared = 3.183, df = 1, p-value = 0.07441
+alternative hypothesis: two.sided
+95 percent confidence interval:
+ -0.0123924394  0.0005820999
+sample estimates:
+   prop 1    prop 2 
+0.4422827 0.4481879 </code></pre>
+</div>
+</div>
+<p>Here, gate 40 is entered first and gate 30 second so that the estimated difference corresponds to treatment minus control.</p>
+</section>
+<section id="day-retention-1" class="level3">
+<h3 class="anchored" data-anchor-id="day-retention-1">5.2 7-day Retention</h3>
+<p>For 7-day retention, let</p>
+<p><span class="math inline">\(p_A = P(\text{retained at day 7} \mid \text{gate 30})\)</span> and <span class="math inline">\(p_B = P(\text{retained at day 7} \mid \text{gate 40})\)</span>,</p>
+<p>where gate 30 is the control group and gate 40 is the treatment group.</p>
+<p>The treatment effect of interest is the difference in 7-day retention probabilities: <span class="math inline">\(\Delta = p_B - p_A\)</span></p>
+<p>Therefore:</p>
+<ul>
+<li><p><span class="math inline">\(\Delta &gt;0\)</span>: moving the gate to level 40 increases 7-day retention.</p></li>
+<li><p><span class="math inline">\(\Delta &lt; 0\)</span>: moving the gate to level 40 decreases 7-day retention.</p></li>
+<li><p><span class="math inline">\(\Delta = 0\)</span>: moving the gate has no effect on 7-day retention.</p></li>
+</ul>
+<p>Because the true population probabilities <span class="math inline">\(p_A\)</span> and <span class="math inline">\(p_B\)</span>are unknown, we will estimate them using the observed retention proportions in the two groups.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>p_A_7 <span class="ot">&lt;-</span> <span class="fu">mean</span>(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>retention_7_num[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_30"</span>]</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>p_B_7 <span class="ot">&lt;-</span> <span class="fu">mean</span>(</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>retention_7_num[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_40"</span>]</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>delta_7 <span class="ot">&lt;-</span> p_B_7 <span class="sc">-</span> p_A_7</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">control_rate =</span> p_A_7,</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatment_rate =</span> p_B_7,</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatment_effect =</span> delta_7</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    control_rate   treatment_rate treatment_effect 
+     0.190201342      0.182000044     -0.008201298 </code></pre>
+</div>
+</div>
+<p>The hypotheses are (same as day-1 retention):</p>
+<p><span class="math display">\[H_0: p_B - p_A = 0 \\
+H_A: p_B - p_A \neq 0\]</span></p>
+<p>Calculate the standard error:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>se_7 <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  p_A_7 <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> p_A_7) <span class="sc">/</span> n_A <span class="sc">+</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    p_B_7 <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> p_B_7) <span class="sc">/</span> n_B</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>se_7</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.002592014</code></pre>
+</div>
+</div>
+<p>Construct an approximate 95% confidence interval:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>ci_7 <span class="ot">&lt;-</span> delta_7 <span class="sc">+</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>) <span class="sc">*</span> <span class="fu">qnorm</span>(<span class="fl">0.975</span>) <span class="sc">*</span> se_7</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>ci_7</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -0.013281552 -0.003121044</code></pre>
+</div>
+</div>
+<p>Then perform the two-sample proportion test:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>test_7 <span class="ot">&lt;-</span> <span class="fu">prop.test</span>(<span class="at">x =</span> <span class="fu">c</span>( <span class="fu">sum</span>(data<span class="sc">$</span>retention_7_num[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_40"</span>]), </span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>                           <span class="fu">sum</span>(data<span class="sc">$</span>retention_7_num[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_30"</span>]) ), </span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">n =</span> <span class="fu">c</span>(n_B, n_A), <span class="at">correct =</span> <span class="cn">FALSE</span> ) </span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>test_7</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    2-sample test for equality of proportions without continuity correction
+
+data:  c(sum(data$retention_7_num[data$version == "gate_40"]), sum(data$retention_7_num[data$version == "gate_30"])) out of c(n_B, n_A)
+X-squared = 10.013, df = 1, p-value = 0.001554
+alternative hypothesis: two.sided
+95 percent confidence interval:
+ -0.013281552 -0.003121044
+sample estimates:
+   prop 1    prop 2 
+0.1820000 0.1902013 </code></pre>
+</div>
+</div>
+</section>
+<section id="number-of-game-rounds" class="level3">
+<h3 class="anchored" data-anchor-id="number-of-game-rounds">5.3 Number of game rounds</h3>
+<p>The number of game rounds is a quantitative outcome rather than a binary outcome.</p>
+<p>Let <span class="math inline">\(\mu_A\)</span> represent the mean number of game rounds for players assigned to gate 30 and <span class="math inline">\(\mu_B\)</span> represent the mean for players assigned to gate 40.</p>
+<p>The treatment effect is:</p>
+<p><span class="math display">\[\Delta_{\text{rounds}} = \mu_B - \mu_A\]</span></p>
+<p>Estimate the group means and treatment effect:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>mean_A <span class="ot">&lt;-</span> <span class="fu">mean</span>(</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>sum_gamerounds[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_30"</span>]</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>mean_B <span class="ot">&lt;-</span> <span class="fu">mean</span>(</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>sum_gamerounds[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_40"</span>]</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>delta_rounds <span class="ot">&lt;-</span> mean_B <span class="sc">-</span> mean_A</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(</span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">control_mean =</span> mean_A,</span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatment_mean =</span> mean_B,</span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatment_effect =</span> delta_rounds</span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    control_mean   treatment_mean treatment_effect 
+       52.456264        51.298776        -1.157488 </code></pre>
+</div>
+</div>
+<p>The hypotheses are:</p>
+<p><span class="math display">\[H_0: \mu_B - \mu_A = 0 \\
+H_A: \mu_B - \mu_A \neq 0\]</span></p>
+<p>Since the population variances are unknown and must be estimated from the sample, we can use a two sample t-test for unequal variance (aka. Welch two-sample t-test).</p>
+<p>The main difference between Welch’s t-test and the equal-variance version of the two-sample t-test is the assumption about the two population variances:</p>
+<ul>
+<li><p>The equal-variance t-test assumes that both groups have the same population variance.</p></li>
+<li><p>Welch’s t-test estimates the variance separately for each group and does not assume that the variances are equal.</p></li>
+</ul>
+<p>Both tests compare the difference between two sample means with the uncertainty in that difference. Welch’s test is generally the safer default because it remains appropriate when the groups have different variances or different sample sizes. It is not a z-test, because the population variances are unknown and must be estimated from the data.</p>
+<p>In practice, this is done by calling a standard t.test in R with <code>var.equal = FALSE</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>rounds_test <span class="ot">&lt;-</span> <span class="fu">t.test</span>(</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>sum_gamerounds[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_40"</span>],</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>sum_gamerounds[data<span class="sc">$</span>version <span class="sc">==</span> <span class="st">"gate_30"</span>],</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">"two.sided"</span>,</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">var.equal =</span> <span class="cn">FALSE</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>rounds_test</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Welch Two Sample t-test
+
+data:  data$sum_gamerounds[data$version == "gate_40"] and data$sum_gamerounds[data$version == "gate_30"]
+t = -0.88544, df = 58595, p-value = 0.3759
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -3.719705  1.404728
+sample estimates:
+mean of x mean of y 
+ 51.29878  52.45626 </code></pre>
+</div>
+</div>
+<p>The confidence interval reported by <code>t.test()</code> corresponds to the difference, <span class="math inline">\(\mu_B - \mu_A\)</span>, where <span class="math inline">\(\mu_B\)</span> is the mean number of game rounds for gate 40 and <span class="math inline">\(\mu_A\)</span> is the mean number of game rounds for gate 30.</p>
+<p>Because the distribution of game rounds is extremely right-skewed and contains an unusually large observation, the difference in means should be interpreted with some caution. The primary analysis will retain all observations, but we can also conduct a sensitivity analysis to determine how strongly the extreme observation affects the result.</p>
+</section>
+</section>
+<section id="interpret-the-results" class="level2">
+<h2 class="anchored" data-anchor-id="interpret-the-results">6. Interpret the results</h2>
+<p>Now, summarizing the estimated treatment effects, confidence intervals, and p-values for the three outcomes:</p>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Estimated effects of moving the gate from level 30 to level 40</caption>
+<colgroup>
+<col style="width: 23%">
+<col style="width: 11%">
+<col style="width: 14%">
+<col style="width: 11%">
+<col style="width: 13%">
+<col style="width: 13%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">Control</th>
+<th style="text-align: right;">Treatment</th>
+<th style="text-align: right;">Effect</th>
+<th style="text-align: right;">CI_lower</th>
+<th style="text-align: right;">CI_upper</th>
+<th style="text-align: right;">p_value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1-day retention</td>
+<td style="text-align: right;">0.4482</td>
+<td style="text-align: right;">0.4423</td>
+<td style="text-align: right;">-0.0059</td>
+<td style="text-align: right;">-0.0124</td>
+<td style="text-align: right;">0.0006</td>
+<td style="text-align: right;">0.0744</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">7-day retention</td>
+<td style="text-align: right;">0.1902</td>
+<td style="text-align: right;">0.1820</td>
+<td style="text-align: right;">-0.0082</td>
+<td style="text-align: right;">-0.0133</td>
+<td style="text-align: right;">-0.0031</td>
+<td style="text-align: right;">0.0016</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Game rounds</td>
+<td style="text-align: right;">52.4563</td>
+<td style="text-align: right;">51.2988</td>
+<td style="text-align: right;">-1.1575</td>
+<td style="text-align: right;">-3.7197</td>
+<td style="text-align: right;">1.4047</td>
+<td style="text-align: right;">0.3759</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<section id="day-retention-2" class="level3">
+<h3 class="anchored" data-anchor-id="day-retention-2">6.1 1-day retention</h3>
+<p>The 1-day retention rate was approximately 44.82% for gate 30 and 44.23% for gate 40.</p>
+<p>The estimated treatment effect was <span class="math inline">\(\hat{\Delta}_1 = -0.0059\)</span>, meaning there was a 0.59% decrease in 1-day retention.</p>
+<p>The two-sample proportion test gave <span class="math inline">\(p = 0.074\)</span> with 95% confidence interval, (-0.0124, 0.0006)</p>
+<p>Because the confidence interval contains zero and the p-value is greater than 0.05, <strong>we do not have sufficient evidence to conclude that moving the gate affects 1-day retention.</strong></p>
+<p>However, the estimated effect is negative, meaning the observed data slightly favor keeping the gate at level 30.</p>
+</section>
+<section id="day-retention-3" class="level3">
+<h3 class="anchored" data-anchor-id="day-retention-3">6.2 7-day retention</h3>
+<p>The 7-day retention rate was approximately 19.02% for gate 30 and 18.20% for gate 40.</p>
+<p>The estimated treatment effect was <span class="math inline">\(\hat{\Delta}_7 = -0.0082\)</span> (a 0.82 percentage-point decrease) in 7-day retention.</p>
+<p>The approximate 95% confidence interval was (-0.0133, -0.0031), and the two-sample proportion test gave p-value of 0.0016.</p>
+<p>Because the confidence interval does not contain zero and the p-value is less than 0.05, <strong>there is statistical evidence that moving the gate from level 30 to level 40 decreases 7-day retention</strong>.</p>
+<p>Although the absolute decrease is 0.82 percentage points, relative to the gate-30 retention rate this represents approximately a 4.3% decrease in 7-day retention.</p>
+</section>
+<section id="number-of-game-rounds-1" class="level3">
+<h3 class="anchored" data-anchor-id="number-of-game-rounds-1">6.3 Number of game rounds</h3>
+<p>Players assigned to gate 30 played an average of approximately 52.46 rounds, while players assigned to gate 40 played an average of approximately 51.30 rounds.</p>
+<p>The estimated treatment effect was <span class="math inline">\(\hat{\Delta}_{rounds} = -1.16\)</span>, meaning players assigned to gate 40 played approximately 1.16 fewer rounds on average.</p>
+<p>The 95% confidence interval was approximately (-3.72, 1.40) with p-value: 0.376.</p>
+<p>Because the confidence interval contains zero and the p-value is greater than 0.05, <strong>there is not sufficient evidence that moving the gate affects the mean number of game rounds played.</strong></p>
+<p>The game-round distribution is also highly right-skewed and contains an extreme observation, so conclusions based on the mean should be interpreted cautiously.</p>
+</section>
+<section id="overall" class="level3">
+<h3 class="anchored" data-anchor-id="overall">Overall</h3>
+<p>The three outcomes do not provide evidence that moving the first gate from level 30 to level 40 improves player behavior.</p>
+<ul>
+<li><p>There is no statistically significant difference in 1-day retention.</p></li>
+<li><p>There is evidence of a decrease in 7-day retention when the gate is moved to level 40.</p></li>
+<li><p>There is no statistically significant difference in the mean number of game rounds played.</p></li>
+</ul>
+<p>The clearest treatment effect is therefore seen in <strong>7-day retention</strong>, where players exposed to the gate at level 40 were less likely to return after seven days.</p>
+</section>
+</section>
+<section id="make-a-practical-recommendation" class="level2">
+<h2 class="anchored" data-anchor-id="make-a-practical-recommendation">7. Make a practical recommendation</h2>
+<p>Based on the results of this experiment, I would recommend <strong>keeping the first gate at level 30 rather than moving it to level 40</strong>.</p>
+<p>Moving the gate to level 40 did not produce a statistically detectable improvement in either 1-day retention or the number of game rounds played. More importantly, 7-day retention decreased by approximately <strong>0.82 percentage points</strong>, corresponding to about a <strong>4.3% relative decrease</strong> compared with the gate-30 group.</p>
+<p>Therefore, the experiment provides no evidence of a benefit from moving the gate and provides evidence of a negative effect on longer-term retention.</p>
+<p>One limitation is that a minimum practically important effect was not specified before the analysis. Therefore, while the decrease in 7-day retention is statistically significant, determining its exact business importance would require additional information about the value of player retention, revenue, and the costs or benefits associated with changing the gate location.</p>
+<p>Given the available outcomes, however, <strong>gate 30 is the preferred version</strong>.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
