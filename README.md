@@ -1,6 +1,7 @@
 # A/B Testing
 The goal of this mini project is to learn how to carry out an A/B testing. <br>
-My personal notes on related concepts and methods are available in [notes.md]([https://google.com)](https://github.com/minjee-kim/ab-testing/blob/main/notes.md).
+My personal notes on related concepts and methods are available in [notes.md]([https://google.com)](https://github.com/minjee-kim/ab-testing/blob/main/notes.md). 
+[Google](https://google.com "Go to Google Search")
 
 ### Overview
 In this mini project, I will be analyzing three datasets: 
