@@ -1,0 +1,20 @@
+---
+title: "Udacity A/B Testing"
+format: html
+editor: visual
+output: index.html
+---
+
+## 1. Define the experiment and research question
+
+## 2. Identify the treatment and control groups
+
+## 3. Define the relevant experiment metrics
+
+## 4. Explore and check the experimental data
+
+## 5. Estimate and test the treatment effect
+
+## 6. Interpret the results
+
+## 7. Make a practical recommendation

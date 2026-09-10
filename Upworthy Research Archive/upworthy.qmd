@@ -1,0 +1,22 @@
+---
+title: "Upworthy Research Archive A/B Testing"
+format: html
+editor: visual
+output: index.html
+---
+
+## 1. Define the experiment and research question
+
+The Upworthy Research Archive is an open dataset of thousands of A/B tests of headlines conducted by Upworthy from January 2013 to April 2015. I transform this dataset into rows where each row represents a comparison between a single pair of A and B variants. The probability that variant A is greater than B is calculated using the click rate.
+
+## 2. Identify the treatment and control groups
+
+## 3. Define the relevant experiment metrics
+
+## 4. Explore and check the experimental data
+
+## 5. Estimate and test the treatment effect
+
+## 6. Interpret the results
+
+## 7. Make a practical recommendation
