@@ -115,10 +115,18 @@ upworthy <- upworthy %>% mutate( created_date = as.Date(substr(created_at, 1, 10
 Then identify and remove experiments that occurred during the affected period:
 
 ```{r}
-analysis_data <- upworthy %>% 
-  group_by(clickability_test_id) %>% 
-  filter( !any( created_date >= as.Date("2013-06-25") & 
-                  created_date <= as.Date("2014-01-10") ) ) %>% 
+analysis_data <- upworthy %>%
+  mutate(
+    created_date = as.Date(substr(created_at, 1, 10))
+  ) %>%
+  group_by(clickability_test_id) %>%
+  filter(
+    !any(
+      created_date >= as.Date("2013-06-25") &
+        created_date <= as.Date("2014-01-10"),
+      na.rm = TRUE
+    )
+  ) %>%
   ungroup()
 ```
 
