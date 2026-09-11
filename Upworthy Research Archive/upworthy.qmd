@@ -5,6 +5,11 @@ editor: visual
 output: index.html
 ---
 
+```{r, echo=FALSE, warning=FALSE, print = FALSE}
+library(tidyverse) 
+library(broom)
+```
+
 ## 1. Define the experiment and research question
 
 [Upworthy](#0) was a digital media publisher (from January 2013 to April 2015) that routinely used randomized experiments to test different ways of presenting its articles.
@@ -22,23 +27,282 @@ How much do alternative headline and image packages affect click-through rates a
 
 ## 2. Identify the treatment and control groups
 
-Begin by inspecting the data:
+We begin by loading the Upworthy archive and inspecting its structure. Each row represents one experimental **package**, or experimental arm, within an experiment.
 
-```{r, echo = FALSE, warning = FALSE}
-library(tidyverse)
-library(broom)
+The variables of interest are:
 
-upworthy <- read.csv("clean-upworthy-archive.csv")
-summary(upworthy)
+- `clickability_test_id`: identifies the experiment. Packages with the same ID belong to the same randomized experiment.
 
+- `impressions`: number of times the package was shown.
+
+- `clicks`: number of clicks received.
+
+- `headline`: headline included in the package.
+
+- `eyecatcher_id`: identifier for the image included in the package.
+
+- `created_at`: time the package was created.
+
+- `winner`: indicates whether the package was ultimately selected by Upworthy.
+
+- `test_week`: week in which the package was created.
+
+```{r}
+upworthy <- read.csv(
+  "upworthy-archive-exploratory-packages-03.12.2020.csv"
+)
+
+glimpse(upworthy)
 ```
 
 ## 3. Define the relevant experiment metrics
 
+The primary metric is the click-through rate (CTR) for each package:
+
+$$CTR = \frac{\text{clicks}}{\text{impressions}}$$
+
+We calculate the CTR for every package:
+
+```{r}
+upworthy <- upworthy %>%
+  mutate(
+    ctr = clicks / impressions
+  )
+```
+
+Unlike a simple two-arm A/B test, many Upworthy experiments contain more than two packages. Therefore, there is not always a single treatment effect of the form (p_B-p_A).
+
+For experiment (j), suppose there are (k) packages with click probabilities
+
+$$p_{j1}, p_{j2}, \ldots, p_{jk}.$$
+
+The main statistical question is whether the click-through rates differ between any of the packages within the same experiment.
+
+As a descriptive measure of the size of the differences within an experiment, we can also calculate the CTR range:
+
+$$\min(\widehat p_{j1},\ldots,\widehat p_{jk}).$$ This describes the observed spread in CTR within an experiment. It should not be interpreted as a single treatment effect because the best and worst packages are selected after observing the data.
+
 ## 4. Explore and check the experimental data
+
+Before testing differences in CTR, we first check that the experimental data are valid.
+
+```{r}
+upworthy %>% summarise(package_rows = n(), 
+                       experiments = n_distinct(clickability_test_id), 
+                       missing_experiment_id = sum(is.na(clickability_test_id)),
+                       missing_impressions = sum(is.na(impressions)), 
+                       missing_clicks = sum(is.na(clicks)), 
+                       nonpositive_impressions = sum(impressions <= 0, na.rm = TRUE),
+                       negative_clicks = sum(clicks < 0, na.rm = TRUE),
+                       clicks_greater_than_impressions = sum(clicks > impressions, na.rm = TRUE) 
+                       )
+```
+
+The dataset contains one row for each experimental package. Packages belonging to the same clickability_test_id were part of the same experiment.
+
+#### Remove experiments from the period with known randomization concerns
+
+A later review of the Upworthy archive identified possible randomization problems for experiments conducted between June 25, 2013 and January 10, 2014.
+
+The version of the dataset used here was released before the corresponding problem indicator was added. Therefore, for causal analyses, we exclude experiments conducted during this period.
+
+First, extract the date from created_at:
+
+```{r}
+upworthy <- upworthy %>% mutate( created_date = as.Date(substr(created_at, 1, 10)) )
+```
+
+Then identify and remove experiments that occurred during the affected period:
+
+```{r}
+analysis_data <- upworthy %>% 
+  group_by(clickability_test_id) %>% 
+  filter( !any( created_date >= as.Date("2013-06-25") & 
+                  created_date <= as.Date("2014-01-10") ) ) %>% 
+  ungroup()
+```
+
+Check how much data remain:
+
+```{r}
+analysis_data %>% summarise( package_rows = n(), experiments = n_distinct(clickability_test_id) )
+```
+
+#### Number of packages per experiment
+
+Next, examine how many packages were compared within each experiment.
+
+```{r}
+experiment_structure <- analysis_data %>%
+  count(
+    clickability_test_id,
+    name = "number_packages"
+  )
+
+experiment_structure %>%
+  count(
+    number_packages,
+    name = "number_experiments"
+  )
+```
+
+Visualizing:
+
+```{r, echo = FALSE}
+ggplot( experiment_structure, aes(x = number_packages) ) + 
+  geom_bar() + 
+  labs( title = "Number of packages per experiment", x = "Number of packages", y = "Number of experiments" ) + 
+  theme_minimal()
+```
+
+#### Sample size
+
+The sample size for each package is its number of impressions.
+
+We can first summarize package-level sample sizes:
+
+```{r}
+analysis_data %>% summarise( minimum = min(impressions), median = median(impressions), mean = mean(impressions), maximum = max(impressions) )
+```
+
+We can also calculate the total number of impressions in each experiment:
+
+```{r}
+experiment_sample_size <- analysis_data %>% group_by(clickability_test_id) %>% summarise( total_impressions = sum(impressions), .groups = "drop" )
+
+summary(experiment_sample_size$total_impressions)
+```
 
 ## 5. Estimate and test the treatment effect
 
+Because most experiments contain more than two packages and there is no universal control group, there is not one treatment-control difference to estimate for every experiment.
+
+Instead, for each experiment we ask whether the underlying click-through rates are equal across all packages.
+
+For an experiment with (k) packages, the null hypothesis is:
+$$H_0: p_1 = p_2 = \cdots = p_k \\
+H_A:
+\text{at least one }p_j\text{ differs}.$$
+For two packages, this reduces to the usual two-sample proportion test.
+
+For more than two packages, prop.test() performs an overall test of equality of proportions.
+
+#### 5.1 Test each experiment
+
+For each experiment, calculate:
+
+- number of packages,
+
+- total impressions,
+
+- minimum observed CTR,
+
+- maximum observed CTR,
+
+- observed CTR range,
+
+- p-value for equality of the CTRs.
+
+```{r}
+experiment_results <- analysis_data %>% 
+  group_by(clickability_test_id) %>% 
+  summarise( number_packages = n(), 
+             total_impressions = sum(impressions), 
+             minimum_ctr = min(ctr), 
+             maximum_ctr = max(ctr), 
+             ctr_range = maximum_ctr - minimum_ctr, 
+             p_value = if ( sum(clicks) == 0 || sum(clicks) == sum(impressions) ) { NA_real_ } else {prop.test(x = clicks, n = impressions, correct = FALSE )$p.value }, .groups = "drop" )
+```
+
+#### 5.2 Account for multiple testing
+
+We are testing thousands of separate experiments. If every experiment were tested at the 0.05 level, some experiments would appear statistically significant simply by chance.
+
+We therefore adjust the p-values using the Bonferroni procedure, which controls the probability of making at least one false positive across all hypothesis tests:
+
+```{r}
+experiment_results <- experiment_results %>% 
+  mutate(p_value_bonferroni = p.adjust(p_value,method = "bonferroni"),
+         significant_05 = p_value < 0.05,
+         significant_bonferroni = p_value_bonferroni < 0.05)
+```
+
+The unadjusted p-value evaluates each experiment separately.
+
+The Bonferroni-adjusted p-value accounts for the fact that we are examining many experiments and controls the family-wise error rate, or the probability of making at least one false positive across the full set of hypothesis tests.
+
 ## 6. Interpret the results
 
+First, summarize the results across experiments:
+
+```{r}
+experiment_results %>%
+  summarise(
+    experiments = n(),
+    
+    experiments_tested =
+      sum(!is.na(p_value)),
+    
+    significant_unadjusted =
+      sum(significant_05, na.rm = TRUE),
+    
+    proportion_significant_unadjusted =
+      mean(significant_05, na.rm = TRUE),
+    
+    significant_bonferroni =
+      sum(significant_bonferroni, na.rm = TRUE),
+    
+    proportion_significant_bonferroni =
+      mean(significant_bonferroni, na.rm = TRUE),
+    
+    median_ctr_range =
+      median(ctr_range, na.rm = TRUE)
+    
+  )
+    
+```
+
+For the experiments retained in this analysis, some show evidence that click-through rates differ among the packages being tested.
+
+The unadjusted analysis identifies experiments with (p\<0.05), but this does not account for the thousands of hypothesis tests being conducted.
+
+After applying the Bonferroni correction, experiments with an adjusted p-value below 0.05 provide stronger evidence that at least one package has a different underlying click-through rate. Because Bonferroni controls the family-wise error rate, it is a conservative adjustment and may identify fewer significant experiments than less stringent procedures.
+
+Importantly, a significant overall test tells us that **not all package CTRs are equal**. It does not by itself tell us which specific packages differ.
+
+We can visualize the distribution of the observed CTR differences:
+
+```{r}
+ggplot(experiment_results,aes(x = ctr_range)) +
+  geom_histogram(bins = 40) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Observed CTR differences across experiments",
+       x = "Difference between highest and lowest CTR",
+       y = "Number of experiments") + theme_minimal()
+```
+
+The Upworthy archive therefore demonstrates that alternative headline and image packages can produce meaningful differences in user clicking behavior, but those differences vary considerably from experiment to experiment.
+
 ## 7. Make a practical recommendation
+
+There is no single headline or image treatment that can be recommended across all Upworthy experiments because every experiment tested different packages.
+
+Instead, the results support the use of randomized experimentation to compare alternative content packages before choosing which version to deploy.
+
+A practical decision process would be:
+
+1.  Randomly assign users to the competing packages.
+
+2.  Compare their click-through rates.
+
+3.  Quantify the uncertainty in those differences.
+
+4.  Account for multiple comparisons when several packages are tested.
+
+5.  Consider whether the observed improvement is large enough to be practically meaningful.
+
+6.  Select a package only when the statistical and practical evidence supports doing so.
+
+The main takeaway is that the package with the highest observed CTR should not automatically be considered the best package. Sampling variability can produce apparent winners, particularly when many variants are tested.
+
+Randomized testing provides a more reliable basis for deciding which headline and image package should be used.
