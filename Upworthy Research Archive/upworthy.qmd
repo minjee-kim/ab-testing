@@ -179,11 +179,9 @@ Because most experiments contain more than two packages and there is no universa
 
 Instead, for each experiment we ask whether the underlying click-through rates are equal across all packages.
 
-For an experiment with (k) packages, the null hypothesis is:
-$$H_0: p_1 = p_2 = \cdots = p_k \\
+For an experiment with (k) packages, the null hypothesis is: $$H_0: p_1 = p_2 = \cdots = p_k \\
 H_A:
-\text{at least one }p_j\text{ differs}.$$
-For two packages, this reduces to the usual two-sample proportion test.
+\text{at least one }p_j\text{ differs}.$$ For two packages, this reduces to the usual two-sample proportion test.
 
 For more than two packages, prop.test() performs an overall test of equality of proportions.
 
