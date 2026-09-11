@@ -2,10 +2,10 @@
 title: "Upworthy Research Archive A/B Testing"
 format: html
 editor: visual
-output: index.html
+output-file: index.html
 ---
 
-```{r, echo=FALSE, warning=FALSE, print = FALSE}
+```{r, echo=FALSE, warning=FALSE, print = FALSE, output = FALSE}
 library(tidyverse) 
 library(broom)
 ```
