@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Udacity A/B Testing</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="udacity_files/libs/clipboard/clipboard.min.js"></script>
+<script src="udacity_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="udacity_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="udacity_files/libs/quarto-html/popper.min.js"></script>
+<script src="udacity_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="udacity_files/libs/quarto-html/anchor.min.js"></script>
+<link href="udacity_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="udacity_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="udacity_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="udacity_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="udacity_files/libs/bootstrap/bootstrap-138a6193a3bd40baf1e627da441a4734.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Udacity A/B Testing</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="define-the-experiment-and-research-question" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-experiment-and-research-question">1. Define the experiment and research question</h2>
+<p>Udacity offers students the option to start a free trial of a paid course or access the course materials for free.</p>
+<p>In this <strong>experiment</strong>, students who clicked <strong>Start Free Trial</strong> were randomly assigned to one of two versions of the enrollment process:</p>
+<ul>
+<li><p>The original enrollment process.</p></li>
+<li><p>A new enrollment process that first asked how many hours per week the student could devote to the course.</p></li>
+</ul>
+<p>If a student in the new version reported fewer than 5 hours per week, Udacity displayed a message explaining that the course generally required a larger time commitment and suggested using the free course materials instead. The student could still continue with the free trial if they wanted.</p>
+<p>The <strong>experimental unit</strong> is a cookie, since cookies were randomly assigned to the control or treatment experience. Once a student enrolled, the student was tracked using a user ID.</p>
+<p>The goal of the screener was to reduce free-trial enrollments from students who were unlikely to continue, without substantially reducing the number of students who eventually made a payment.</p>
+<p>Formally, the <strong>research question</strong> is whether adding the free-trial screener reduces free-trial enrollment while avoiding a meaningful decrease in eventual payment.</p>
+<p>Reading the data:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>baseline <span class="ot">=</span> <span class="fu">read.csv</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Final Project Baseline Values.csv"</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">header =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"metric"</span>, <span class="st">"value"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>control <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="st">"Final Project Results - Control.csv"</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>treatment <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="st">"Final Project Results - Experiment.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The experiment data contain five variables:</p>
+<ul>
+<li><p><strong>Date</strong> - the date on which the observations were recorded.</p></li>
+<li><p><strong>Pageviews</strong> - the number of unique cookies that viewed the course overview page.</p></li>
+<li><p><strong>Clicks</strong> - the number of unique cookies that clicked <strong>Start Free Trial</strong>.</p></li>
+<li><p><strong>Enrollments</strong> - the number of users who completed checkout and enrolled in the free trial.</p></li>
+<li><p><strong>Payments</strong> - the number of users who remained enrolled past the free-trial period and made a payment.</p></li>
+</ul>
+<p>The baseline file contains historical values for the same enrollment funnel and will be used for experiment planning.</p>
+</section>
+<section id="identify-the-treatment-and-control-groups" class="level2">
+<h2 class="anchored" data-anchor-id="identify-the-treatment-and-control-groups">2. Identify the treatment and control groups</h2>
+<p>Students were randomly assigned to one of two versions of the free-trial enrollment process:</p>
+<ul>
+<li><p><strong>Control group</strong>: the original enrollment process.</p></li>
+<li><p><strong>Treatment group</strong>: the enrollment process with the time-commitment screener.</p></li>
+</ul>
+<p>The screener was shown only after a student clicked <strong>Start Free Trial</strong>. Therefore, pageviews and clicks occur before the treatment is actually shown, while enrollment and payment can potentially be affected by the treatment.</p>
+</section>
+<section id="define-the-relevant-experiment-metrics" class="level2">
+<h2 class="anchored" data-anchor-id="define-the-relevant-experiment-metrics">3. Define the relevant experiment metrics</h2>
+<p>This experiment contains two types of metrics: <strong>invariant metrics</strong>, which should remain similar between the two groups, and <strong>evaluation metrics</strong>, which measure the effect of the screener.</p>
+<section id="invariant-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="invariant-metrics">Invariant metrics</h3>
+<p>The invariant metrics are:</p>
+<ul>
+<li><p><strong>Pageviews</strong>: number of cookies that viewed the course overview page.</p></li>
+<li><p><strong>Clicks</strong>: number of cookies that clicked <strong>Start Free Trial</strong>.</p></li>
+<li><p><strong>Click-through probability</strong>: the probability of clicking Start Free Trial after viewing the course page.</p></li>
+</ul>
+<p><span class="math display">\[CTP = \frac{\text{Clicks}}{\text{Pageviews}}\]</span></p>
+<p>Because the treatment is not shown until after the click, these quantities should not be systematically affected by the screener. We will use them later to check the experiment.</p>
+</section>
+<section id="evaluation-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="evaluation-metrics">Evaluation metrics</h3>
+<p>The two primary evaluation metrics are:</p>
+<p><strong>Gross conversion</strong></p>
+<p><span class="math display">\[GC = \frac{\text{Enrollments}}{\text{Clicks}}\]</span></p>
+<p>Gross conversion measures the probability that a student enrolls in the free trial after clicking Start Free Trial.</p>
+<p><strong>Net conversion</strong></p>
+<p><span class="math display">\[NC = \frac{\text{Payments}}{\text{Clicks}}\]</span></p>
+<p>Net conversion measures the probability that a student eventually makes a payment after clicking Start Free Trial.</p>
+<p>The experiment also provides the <strong>retention rate</strong></p>
+<p><span class="math display">\[R = \frac{\text{Payments}}{\text{Enrollments}},\]</span></p>
+<p>but this metric requires a much larger sample size because its denominator is the number of enrollments rather than the number of clicks. Therefore, the main analysis will focus on gross conversion and net conversion.</p>
+<p>The supplied minimum practically important effects are:</p>
+<ul>
+<li><p><strong>Gross conversion</strong>: <span class="math inline">\(d_{\min}=0.01\)</span></p></li>
+<li><p><strong>Net conversion</strong>: <span class="math inline">\(d_{\min}=0.0075\)</span></p></li>
+</ul>
+<p>These values allow us to consider both <strong>statistical significance</strong> and <strong>practical significance</strong>.</p>
+</section>
+<section id="baseline-values-and-sample-size" class="level3">
+<h3 class="anchored" data-anchor-id="baseline-values-and-sample-size">Baseline values and sample size</h3>
+<p>The supplied baseline values are:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>baseline</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                metric        value
+1 Unique cookies to view course overview page per day: 4.000000e+04
+2  Unique cookies to click "Start free trial" per day: 3.200000e+03
+3                                 Enrollments per day: 6.600000e+02
+4     Click-through-probability on "Start free trial": 8.000000e-02
+5               Probability of enrolling, given click: 2.062500e-01
+6                Probability of payment, given enroll: 5.300000e-01
+7                  Probability of payment, given click 1.093125e-01</code></pre>
+</div>
+</div>
+<p>Extract the historical rates:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pageviews_day <span class="ot">&lt;-</span> baseline<span class="sc">$</span>value[<span class="dv">1</span>]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>clicks_day <span class="ot">&lt;-</span> baseline<span class="sc">$</span>value[<span class="dv">2</span>]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>enrollments_day <span class="ot">&lt;-</span> baseline<span class="sc">$</span>value[<span class="dv">3</span>]</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>ctp_baseline <span class="ot">&lt;-</span> baseline<span class="sc">$</span>value[<span class="dv">4</span>]</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>gc_baseline <span class="ot">&lt;-</span> baseline<span class="sc">$</span>value[<span class="dv">5</span>]</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>retention_baseline <span class="ot">&lt;-</span> baseline<span class="sc">$</span>value[<span class="dv">6</span>]</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>nc_baseline <span class="ot">&lt;-</span> baseline<span class="sc">$</span>value[<span class="dv">7</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The historical click rate is:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>click_rate <span class="ot">&lt;-</span> clicks_day <span class="sc">/</span> pageviews_day</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>click_rate</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.08</code></pre>
+</div>
+</div>
+<p>Using a significance level of <span class="math inline">\(\alpha=0.05\)</span> and power of 0.80, we can estimate the sample size required to detect the specified minimum effects.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>n_gc <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">power.prop.test</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">p1 =</span> gc_baseline,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">p2 =</span> gc_baseline <span class="sc">-</span> <span class="fl">0.01</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">alternative =</span> <span class="st">"two.sided"</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">$</span>n</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>n_nc <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">power.prop.test</span>(</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">p1 =</span> nc_baseline,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">p2 =</span> nc_baseline <span class="sc">-</span> <span class="fl">0.0075</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">power =</span> <span class="fl">0.80</span>,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">alternative =</span> <span class="st">"two.sided"</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">$</span>n</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>sample_size <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">Metric =</span> <span class="fu">c</span>(<span class="st">"Gross conversion"</span>, <span class="st">"Net conversion"</span>),</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">Required_clicks_per_group =</span> <span class="fu">c</span>(n_gc, n_nc),</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">Approx_required_pageviews =</span> <span class="fu">ceiling</span>(</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    <span class="dv">2</span> <span class="sc">*</span> <span class="fu">c</span>(n_gc, n_nc) <span class="sc">/</span> click_rate</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>  sample_size,</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Approximate sample size requirements"</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Approximate sample size requirements</caption>
+<colgroup>
+<col style="width: 24%">
+<col style="width: 37%">
+<col style="width: 37%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">Required_clicks_per_group</th>
+<th style="text-align: right;">Approx_required_pageviews</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Gross conversion</td>
+<td style="text-align: right;">25233</td>
+<td style="text-align: right;">630825</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Net conversion</td>
+<td style="text-align: right;">26349</td>
+<td style="text-align: right;">658725</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Net conversion requires a large number of observations because payments are relatively uncommon. This is important when we later interpret uncertainty in the estimated effect.</p>
+</section>
+</section>
+<section id="explore-and-check-the-experimental-data" class="level2">
+<h2 class="anchored" data-anchor-id="explore-and-check-the-experimental-data">4. Explore and check the experimental data</h2>
+<p>Before estimating the treatment effect, examine the quality and structure of the data.</p>
+<p><strong>Dimension of the data</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(control)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 37  5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(treatment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 37  5</code></pre>
+</div>
+</div>
+<p>The control and treatment datasets contain daily observations for the experiment period.</p>
+<p><strong>Missing values</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(control))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       Date   Pageviews      Clicks Enrollments    Payments 
+          0           0           0          14          14 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(treatment))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       Date   Pageviews      Clicks Enrollments    Payments 
+          0           0           0          14          14 </code></pre>
+</div>
+</div>
+<p>Pageviews and clicks are recorded throughout the experiment, but enrollments and payments are missing for the final 14 days.</p>
+<p>This occurs because students need enough follow-up time to determine whether they enroll and eventually make a payment. Therefore:</p>
+<ul>
+<li><p>the full experiment period can be used to check pageviews, clicks, and click-through probability;</p></li>
+<li><p>only dates with observed enrollment and payment outcomes should be used to estimate gross and net conversion.</p></li>
+</ul>
+<p>Create the evaluation datasets:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>evaluation_dates <span class="ot">&lt;-</span> <span class="fu">intersect</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  control<span class="sc">$</span>Date[</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">is.na</span>(control<span class="sc">$</span>Enrollments) <span class="sc">&amp;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>      <span class="sc">!</span><span class="fu">is.na</span>(control<span class="sc">$</span>Payments)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  ],</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  treatment<span class="sc">$</span>Date[</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">is.na</span>(treatment<span class="sc">$</span>Enrollments) <span class="sc">&amp;</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>      <span class="sc">!</span><span class="fu">is.na</span>(treatment<span class="sc">$</span>Payments)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  ]</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>control_eval <span class="ot">&lt;-</span> control[</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  control<span class="sc">$</span>Date <span class="sc">%in%</span> evaluation_dates,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>treatment_eval <span class="ot">&lt;-</span> treatment[</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  treatment<span class="sc">$</span>Date <span class="sc">%in%</span> evaluation_dates,</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(evaluation_dates)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 23</code></pre>
+</div>
+</div>
+<section id="check-the-invariant-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="check-the-invariant-metrics">Check the invariant metrics</h3>
+<p>First, calculate the total pageviews and clicks in each group:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>pageviews_A <span class="ot">&lt;-</span> <span class="fu">sum</span>(control<span class="sc">$</span>Pageviews)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>pageviews_B <span class="ot">&lt;-</span> <span class="fu">sum</span>(treatment<span class="sc">$</span>Pageviews)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>clicks_A <span class="ot">&lt;-</span> <span class="fu">sum</span>(control<span class="sc">$</span>Clicks)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>clicks_B <span class="ot">&lt;-</span> <span class="fu">sum</span>(treatment<span class="sc">$</span>Clicks)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">control_pageviews =</span> pageviews_A,</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatment_pageviews =</span> pageviews_B,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">control_clicks =</span> clicks_A,</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatment_clicks =</span> clicks_B</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  control_pageviews treatment_pageviews      control_clicks    treatment_clicks 
+             345543              344660               28378               28325 </code></pre>
+</div>
+</div>
+<p>Since users were intended to be divided approximately equally between the two groups, we can check whether the pageviews and clicks are consistent with a 50/50 allocation.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>pageview_check <span class="ot">&lt;-</span> <span class="fu">binom.test</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> pageviews_B,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> pageviews_A <span class="sc">+</span> pageviews_B,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">p =</span> <span class="fl">0.5</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>click_check <span class="ot">&lt;-</span> <span class="fu">binom.test</span>(</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> clicks_B,</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> clicks_A <span class="sc">+</span> clicks_B,</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">p =</span> <span class="fl">0.5</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>pageview_check</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Exact binomial test
+
+data:  pageviews_B and pageviews_A + pageviews_B
+number of successes = 344660, number of trials = 690203, p-value =
+0.2884
+alternative hypothesis: true probability of success is not equal to 0.5
+95 percent confidence interval:
+ 0.4981800 0.5005406
+sample estimates:
+probability of success 
+             0.4993603 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>click_check</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Exact binomial test
+
+data:  clicks_B and clicks_A + clicks_B
+number of successes = 28325, number of trials = 56703, p-value = 0.8271
+alternative hypothesis: true probability of success is not equal to 0.5
+95 percent confidence interval:
+ 0.4954085 0.5036568
+sample estimates:
+probability of success 
+             0.4995327 </code></pre>
+</div>
+</div>
+<p>Next, compare click-through probability between the groups:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>ctp_A <span class="ot">&lt;-</span> clicks_A <span class="sc">/</span> pageviews_A</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>ctp_B <span class="ot">&lt;-</span> clicks_B <span class="sc">/</span> pageviews_B</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>delta_ctp <span class="ot">&lt;-</span> ctp_B <span class="sc">-</span> ctp_A</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">control_rate =</span> ctp_A,</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatment_rate =</span> ctp_B,</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">difference =</span> delta_ctp</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  control_rate treatment_rate     difference 
+  8.212581e-02   8.218244e-02   5.662709e-05 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>ctp_test <span class="ot">&lt;-</span> <span class="fu">prop.test</span>(</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> <span class="fu">c</span>(clicks_B, clicks_A),</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="fu">c</span>(pageviews_B, pageviews_A),</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">correct =</span> <span class="cn">FALSE</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>ctp_test</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    2-sample test for equality of proportions without continuity correction
+
+data:  c(clicks_B, clicks_A) out of c(pageviews_B, pageviews_A)
+X-squared = 0.0073378, df = 1, p-value = 0.9317
+alternative hypothesis: two.sided
+95 percent confidence interval:
+ -0.001239029  0.001352283
+sample estimates:
+    prop 1     prop 2 
+0.08218244 0.08212581 </code></pre>
+</div>
+</div>
+<p>If pageviews, clicks, and click-through probability are similar between the groups, this supports the expected behavior of the random assignment before the treatment is shown.</p>
+</section>
+</section>
+<section id="estimate-and-test-the-treatment-effect" class="level2">
+<h2 class="anchored" data-anchor-id="estimate-and-test-the-treatment-effect">5. Estimate and test the treatment effect</h2>
+<p>Because cookies were randomly assigned to the original enrollment process or the screener, we can estimate the treatment effect by directly comparing outcomes between the two groups. Throughout the analysis:</p>
+<ul>
+<li><p>A = control</p></li>
+<li><p>B = treatment</p></li>
+</ul>
+<p>For each outcome, the treatment effect is defined as:</p>
+<p><span class="math display">\[\Delta = \text{Outcome}_B - \text{Outcome}_A\]</span></p>
+<p>A negative value of <span class="math inline">\(\Delta\)</span> means the metric is lower under the screener, while a positive value means the metric is higher under the screener.</p>
+<p>For the evaluation metrics, use only dates for which enrollment and payment outcomes are observed.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>n_A <span class="ot">&lt;-</span> <span class="fu">sum</span>(control_eval<span class="sc">$</span>Clicks)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>n_B <span class="ot">&lt;-</span> <span class="fu">sum</span>(treatment_eval<span class="sc">$</span>Clicks)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>enrollments_A <span class="ot">&lt;-</span> <span class="fu">sum</span>(control_eval<span class="sc">$</span>Enrollments)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>enrollments_B <span class="ot">&lt;-</span> <span class="fu">sum</span>(treatment_eval<span class="sc">$</span>Enrollments)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>payments_A <span class="ot">&lt;-</span> <span class="fu">sum</span>(control_eval<span class="sc">$</span>Payments)</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>payments_B <span class="ot">&lt;-</span> <span class="fu">sum</span>(treatment_eval<span class="sc">$</span>Payments)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="gross-conversion" class="level3">
+<h3 class="anchored" data-anchor-id="gross-conversion">5.1 Gross conversion</h3>
+<p>For gross conversion, let <span class="math inline">\(p_A\)</span> be the probability that a student in the control group enrolls after clicking Start Free Trial, and let <span class="math inline">\(p_B\)</span> be the corresponding probability for the treatment group.</p>
+<p>The treatment effect is</p>
+<p><span class="math display">\[\Delta_{GC} = p_B - p_A.\]</span></p>
+<p>Estimate the two probabilities and their difference:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>p_A_gc <span class="ot">&lt;-</span> enrollments_A <span class="sc">/</span> n_A</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>p_B_gc <span class="ot">&lt;-</span> enrollments_B <span class="sc">/</span> n_B</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>delta_gc <span class="ot">&lt;-</span> p_B_gc <span class="sc">-</span> p_A_gc</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">control_rate =</span> p_A_gc,</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatment_rate =</span> p_B_gc,</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatment_effect =</span> delta_gc</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    control_rate   treatment_rate treatment_effect 
+      0.21887469       0.19831981      -0.02055487 </code></pre>
+</div>
+</div>
+<p>The hypotheses are:</p>
+<p><span class="math display">\[H_0: p_B-p_A=0\]</span></p>
+<p><span class="math display">\[H_A: p_B-p_A\neq0\]</span></p>
+<p>Calculate the standard error:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>se_gc <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  p_A_gc <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> p_A_gc) <span class="sc">/</span> n_A <span class="sc">+</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    p_B_gc <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> p_B_gc) <span class="sc">/</span> n_B</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>se_gc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.004370125</code></pre>
+</div>
+</div>
+<p>Construct an approximate 95% confidence interval:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>ci_gc <span class="ot">&lt;-</span> delta_gc <span class="sc">+</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>) <span class="sc">*</span> <span class="fu">qnorm</span>(<span class="fl">0.975</span>) <span class="sc">*</span> se_gc</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>ci_gc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -0.02912016 -0.01198959</code></pre>
+</div>
+</div>
+<p>Then perform the two-sample proportion test:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>test_gc <span class="ot">&lt;-</span> <span class="fu">prop.test</span>(</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> <span class="fu">c</span>(enrollments_B, enrollments_A),</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="fu">c</span>(n_B, n_A),</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">correct =</span> <span class="cn">FALSE</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>test_gc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    2-sample test for equality of proportions without continuity correction
+
+data:  c(enrollments_B, enrollments_A) out of c(n_B, n_A)
+X-squared = 22.107, df = 1, p-value = 2.578e-06
+alternative hypothesis: two.sided
+95 percent confidence interval:
+ -0.02912016 -0.01198959
+sample estimates:
+   prop 1    prop 2 
+0.1983198 0.2188747 </code></pre>
+</div>
+</div>
+<p>Here, the treatment group is entered first and the control group second so that the estimated difference corresponds to treatment minus control.</p>
+<p>The minimum practically important effect for gross conversion is 0.01. Therefore, in addition to determining whether the confidence interval contains zero, we will compare the interval with <span class="math inline">\(\pm0.01\)</span>.</p>
+</section>
+<section id="net-conversion" class="level3">
+<h3 class="anchored" data-anchor-id="net-conversion">5.2 Net conversion</h3>
+<p>For net conversion, let <span class="math inline">\(p_A\)</span> be the probability that a student in the control group eventually makes a payment after clicking Start Free Trial, and let <span class="math inline">\(p_B\)</span> be the corresponding probability for the treatment group.</p>
+<p>The treatment effect is</p>
+<p><span class="math display">\[\Delta_{NC} = p_B-p_A.\]</span></p>
+<p>Estimate the two probabilities and their difference:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>p_A_nc <span class="ot">&lt;-</span> payments_A <span class="sc">/</span> n_A</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>p_B_nc <span class="ot">&lt;-</span> payments_B <span class="sc">/</span> n_B</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>delta_nc <span class="ot">&lt;-</span> p_B_nc <span class="sc">-</span> p_A_nc</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">control_rate =</span> p_A_nc,</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatment_rate =</span> p_B_nc,</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">treatment_effect =</span> delta_nc</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    control_rate   treatment_rate treatment_effect 
+     0.117562019      0.112688297     -0.004873723 </code></pre>
+</div>
+</div>
+<p>The hypotheses are:</p>
+<p><span class="math display">\[H_0: p_B-p_A=0\]</span></p>
+<p><span class="math display">\[H_A: p_B-p_A\neq0\]</span></p>
+<p>Calculate the standard error:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>se_nc <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  p_A_nc <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> p_A_nc) <span class="sc">/</span> n_A <span class="sc">+</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    p_B_nc <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> p_B_nc) <span class="sc">/</span> n_B</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>se_nc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.003433973</code></pre>
+</div>
+</div>
+<p>Construct an approximate 95% confidence interval:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>ci_nc <span class="ot">&lt;-</span> delta_nc <span class="sc">+</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>) <span class="sc">*</span> <span class="fu">qnorm</span>(<span class="fl">0.975</span>) <span class="sc">*</span> se_nc</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>ci_nc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -0.011604186  0.001856741</code></pre>
+</div>
+</div>
+<p>Then perform the two-sample proportion test:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>test_nc <span class="ot">&lt;-</span> <span class="fu">prop.test</span>(</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> <span class="fu">c</span>(payments_B, payments_A),</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="fu">c</span>(n_B, n_A),</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">correct =</span> <span class="cn">FALSE</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>test_nc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    2-sample test for equality of proportions without continuity correction
+
+data:  c(payments_B, payments_A) out of c(n_B, n_A)
+X-squared = 2.0141, df = 1, p-value = 0.1558
+alternative hypothesis: two.sided
+95 percent confidence interval:
+ -0.011604186  0.001856741
+sample estimates:
+   prop 1    prop 2 
+0.1126883 0.1175620 </code></pre>
+</div>
+</div>
+<p>The minimum practically important effect for net conversion is 0.0075. A decrease larger than 0.75 percentage points would therefore be practically important.</p>
+</section>
+</section>
+<section id="interpret-the-results" class="level2">
+<h2 class="anchored" data-anchor-id="interpret-the-results">6. Interpret the results</h2>
+<p>Now, summarizing the estimated treatment effects, confidence intervals, and p-values for the two evaluation metrics:</p>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Estimated effects of adding the free-trial screener</caption>
+<colgroup>
+<col style="width: 24%">
+<col style="width: 11%">
+<col style="width: 14%">
+<col style="width: 11%">
+<col style="width: 13%">
+<col style="width: 13%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">Control</th>
+<th style="text-align: right;">Treatment</th>
+<th style="text-align: right;">Effect</th>
+<th style="text-align: right;">CI_lower</th>
+<th style="text-align: right;">CI_upper</th>
+<th style="text-align: right;">p_value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Gross conversion</td>
+<td style="text-align: right;">0.2189</td>
+<td style="text-align: right;">0.1983</td>
+<td style="text-align: right;">-0.0206</td>
+<td style="text-align: right;">-0.0291</td>
+<td style="text-align: right;">-0.0120</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Net conversion</td>
+<td style="text-align: right;">0.1176</td>
+<td style="text-align: right;">0.1127</td>
+<td style="text-align: right;">-0.0049</td>
+<td style="text-align: right;">-0.0116</td>
+<td style="text-align: right;">0.0019</td>
+<td style="text-align: right;">0.1558</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<section id="gross-conversion-1" class="level3">
+<h3 class="anchored" data-anchor-id="gross-conversion-1">6.1 Gross conversion</h3>
+<p>The gross-conversion rate was approximately 21.89% for the control group and 19.83% for the treatment group.</p>
+<p>The estimated treatment effect was <span class="math inline">\(\hat{\Delta}_{GC}=-0.0206\)</span>, meaning the screener decreased gross conversion by approximately <strong>2.06 percentage points</strong>.</p>
+<p>The approximate 95% confidence interval was (-0.0291, -0.0120), and the two-sample proportion test gave a p-value less than 0.001.</p>
+<p>Because the confidence interval does not contain zero, <strong>there is statistical evidence that the screener decreases gross conversion</strong>.</p>
+<p>The entire confidence interval is also below -0.01, the minimum practically important decrease. Therefore, the decrease is also <strong>practically significant</strong> according to the specified threshold.</p>
+<p>This suggests that the screener successfully reduced the number of students entering the free trial after clicking Start Free Trial.</p>
+</section>
+<section id="net-conversion-1" class="level3">
+<h3 class="anchored" data-anchor-id="net-conversion-1">6.2 Net conversion</h3>
+<p>The net-conversion rate was approximately 11.76% for the control group and 11.27% for the treatment group.</p>
+<p>The estimated treatment effect was <span class="math inline">\(\hat{\Delta}_{NC}=-0.0049\)</span>, corresponding to a decrease of approximately <strong>0.49 percentage points</strong>.</p>
+<p>The approximate 95% confidence interval was (-0.0116, 0.0019), and the two-sample proportion test gave a p-value of approximately 0.156.</p>
+<p>Because the confidence interval contains zero and the p-value is greater than 0.05, <strong>there is not sufficient evidence that the screener changes net conversion</strong>.</p>
+<p>However, the confidence interval extends below -0.0075, the minimum practically important decrease. Therefore, the data do not rule out a decrease in net conversion that would be practically important.</p>
+<p>A non-significant result here should not be interpreted as evidence that the screener has no effect on payment.</p>
+</section>
+<section id="overall" class="level3">
+<h3 class="anchored" data-anchor-id="overall">Overall</h3>
+<p>The two evaluation metrics tell different parts of the story:</p>
+<ul>
+<li><p>There is strong evidence that the screener decreases gross conversion.</p></li>
+<li><p>The decrease in gross conversion is large enough to be practically meaningful according to the specified threshold.</p></li>
+<li><p>There is not sufficient evidence of a change in net conversion.</p></li>
+<li><p>However, the uncertainty around net conversion is large enough that a practically important decrease cannot be ruled out.</p></li>
+</ul>
+<p>Therefore, the experiment shows that the screener successfully filters some students out of the free trial, but it does not provide strong enough evidence that this can be done without negatively affecting eventual payment.</p>
+</section>
+</section>
+<section id="make-a-practical-recommendation" class="level2">
+<h2 class="anchored" data-anchor-id="make-a-practical-recommendation">7. Make a practical recommendation</h2>
+<p>Based on the results of this experiment, I would <strong>not recommend immediately launching the free-trial screener to all users</strong>.</p>
+<p>The screener clearly reduced free-trial enrollment, which was one of the goals of the experiment. However, the more important question is whether this reduction can occur without meaningfully reducing eventual payment.</p>
+<p>For net conversion, the confidence interval contains both zero and values beyond the minimum practically important decrease of 0.75 percentage points. Therefore, the current experiment does not estimate the payment effect precisely enough to rule out a practically important negative effect.</p>
+<p>A reasonable next step would be to run a larger or longer experiment designed to estimate net conversion more precisely.</p>
+<p>The main takeaway is that <strong>a non-significant difference in net conversion is not the same as demonstrating that the screener has no harmful effect</strong>. More precision is needed before recommending a full launch.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

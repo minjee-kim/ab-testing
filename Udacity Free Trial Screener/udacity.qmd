@@ -7,14 +7,540 @@ output: index.html
 
 ## 1. Define the experiment and research question
 
+Udacity offers students the option to start a free trial of a paid course or access the course materials for free.
+
+In this **experiment**, students who clicked **Start Free Trial** were randomly assigned to one of two versions of the enrollment process:
+
+- The original enrollment process.
+
+- A new enrollment process that first asked how many hours per week the student could devote to the course.
+
+If a student in the new version reported fewer than 5 hours per week, Udacity displayed a message explaining that the course generally required a larger time commitment and suggested using the free course materials instead. The student could still continue with the free trial if they wanted.
+
+The **experimental unit** is a cookie, since cookies were randomly assigned to the control or treatment experience. Once a student enrolled, the student was tracked using a user ID.
+
+The goal of the screener was to reduce free-trial enrollments from students who were unlikely to continue, without substantially reducing the number of students who eventually made a payment.
+
+Formally, the **research question** is whether adding the free-trial screener reduces free-trial enrollment while avoiding a meaningful decrease in eventual payment.
+
+Reading the data:
+
+```{r}
+baseline = read.csv(
+  "Final Project Baseline Values.csv",
+  header = FALSE,
+  col.names = c("metric", "value")
+)
+
+control = read.csv("Final Project Results - Control.csv")
+treatment = read.csv("Final Project Results - Experiment.csv")
+```
+
+The experiment data contain five variables:
+
+- **Date** - the date on which the observations were recorded.
+
+- **Pageviews** - the number of unique cookies that viewed the course overview page.
+
+- **Clicks** - the number of unique cookies that clicked **Start Free Trial**.
+
+- **Enrollments** - the number of users who completed checkout and enrolled in the free trial.
+
+- **Payments** - the number of users who remained enrolled past the free-trial period and made a payment.
+
+The baseline file contains historical values for the same enrollment funnel and will be used for experiment planning.
+
 ## 2. Identify the treatment and control groups
+
+Students were randomly assigned to one of two versions of the free-trial enrollment process:
+
+- **Control group**: the original enrollment process.
+
+- **Treatment group**: the enrollment process with the time-commitment screener.
+
+The screener was shown only after a student clicked **Start Free Trial**. Therefore, pageviews and clicks occur before the treatment is actually shown, while enrollment and payment can potentially be affected by the treatment.
 
 ## 3. Define the relevant experiment metrics
 
+This experiment contains two types of metrics: **invariant metrics**, which should remain similar between the two groups, and **evaluation metrics**, which measure the effect of the screener.
+
+### Invariant metrics
+
+The invariant metrics are:
+
+- **Pageviews**: number of cookies that viewed the course overview page.
+
+- **Clicks**: number of cookies that clicked **Start Free Trial**.
+
+- **Click-through probability**: the probability of clicking Start Free Trial after viewing the course page.
+
+$$CTP = \frac{\text{Clicks}}{\text{Pageviews}}$$
+
+Because the treatment is not shown until after the click, these quantities should not be systematically affected by the screener. We will use them later to check the experiment.
+
+### Evaluation metrics
+
+The two primary evaluation metrics are:
+
+**Gross conversion**
+
+$$GC = \frac{\text{Enrollments}}{\text{Clicks}}$$
+
+Gross conversion measures the probability that a student enrolls in the free trial after clicking Start Free Trial.
+
+**Net conversion**
+
+$$NC = \frac{\text{Payments}}{\text{Clicks}}$$
+
+Net conversion measures the probability that a student eventually makes a payment after clicking Start Free Trial.
+
+The experiment also provides the **retention rate**
+
+$$R = \frac{\text{Payments}}{\text{Enrollments}},$$
+
+but this metric requires a much larger sample size because its denominator is the number of enrollments rather than the number of clicks. Therefore, the main analysis will focus on gross conversion and net conversion.
+
+The supplied minimum practically important effects are:
+
+- **Gross conversion**: $d_{\min}=0.01$
+
+- **Net conversion**: $d_{\min}=0.0075$
+
+These values allow us to consider both **statistical significance** and **practical significance**.
+
+### Baseline values and sample size
+
+The supplied baseline values are:
+
+```{r}
+baseline
+```
+
+Extract the historical rates:
+
+```{r}
+pageviews_day <- baseline$value[1]
+clicks_day <- baseline$value[2]
+enrollments_day <- baseline$value[3]
+
+ctp_baseline <- baseline$value[4]
+gc_baseline <- baseline$value[5]
+retention_baseline <- baseline$value[6]
+nc_baseline <- baseline$value[7]
+```
+
+The historical click rate is:
+
+```{r}
+click_rate <- clicks_day / pageviews_day
+click_rate
+```
+
+Using a significance level of $\alpha=0.05$ and power of 0.80, we can estimate the sample size required to detect the specified minimum effects.
+
+```{r}
+n_gc <- ceiling(
+  power.prop.test(
+    p1 = gc_baseline,
+    p2 = gc_baseline - 0.01,
+    sig.level = 0.05,
+    power = 0.80,
+    alternative = "two.sided"
+  )$n
+)
+
+n_nc <- ceiling(
+  power.prop.test(
+    p1 = nc_baseline,
+    p2 = nc_baseline - 0.0075,
+    sig.level = 0.05,
+    power = 0.80,
+    alternative = "two.sided"
+  )$n
+)
+
+sample_size <- data.frame(
+  Metric = c("Gross conversion", "Net conversion"),
+  Required_clicks_per_group = c(n_gc, n_nc),
+  Approx_required_pageviews = ceiling(
+    2 * c(n_gc, n_nc) / click_rate
+  )
+)
+
+knitr::kable(
+  sample_size,
+  caption = "Approximate sample size requirements"
+)
+```
+
+Net conversion requires a large number of observations because payments are relatively uncommon. This is important when we later interpret uncertainty in the estimated effect.
+
 ## 4. Explore and check the experimental data
+
+Before estimating the treatment effect, examine the quality and structure of the data.
+
+**Dimension of the data**
+
+```{r}
+dim(control)
+dim(treatment)
+```
+
+The control and treatment datasets contain daily observations for the experiment period.
+
+**Missing values**
+
+```{r}
+colSums(is.na(control))
+colSums(is.na(treatment))
+```
+
+Pageviews and clicks are recorded throughout the experiment, but enrollments and payments are missing for the final 14 days.
+
+This occurs because students need enough follow-up time to determine whether they enroll and eventually make a payment. Therefore:
+
+- the full experiment period can be used to check pageviews, clicks, and click-through probability;
+
+- only dates with observed enrollment and payment outcomes should be used to estimate gross and net conversion.
+
+Create the evaluation datasets:
+
+```{r}
+evaluation_dates <- intersect(
+  control$Date[
+    !is.na(control$Enrollments) &
+      !is.na(control$Payments)
+  ],
+  treatment$Date[
+    !is.na(treatment$Enrollments) &
+      !is.na(treatment$Payments)
+  ]
+)
+
+control_eval <- control[
+  control$Date %in% evaluation_dates,
+]
+
+treatment_eval <- treatment[
+  treatment$Date %in% evaluation_dates,
+]
+
+length(evaluation_dates)
+```
+
+### Check the invariant metrics
+
+First, calculate the total pageviews and clicks in each group:
+
+```{r}
+pageviews_A <- sum(control$Pageviews)
+pageviews_B <- sum(treatment$Pageviews)
+
+clicks_A <- sum(control$Clicks)
+clicks_B <- sum(treatment$Clicks)
+
+c(
+  control_pageviews = pageviews_A,
+  treatment_pageviews = pageviews_B,
+  control_clicks = clicks_A,
+  treatment_clicks = clicks_B
+)
+```
+
+Since users were intended to be divided approximately equally between the two groups, we can check whether the pageviews and clicks are consistent with a 50/50 allocation.
+
+```{r}
+pageview_check <- binom.test(
+  x = pageviews_B,
+  n = pageviews_A + pageviews_B,
+  p = 0.5
+)
+
+click_check <- binom.test(
+  x = clicks_B,
+  n = clicks_A + clicks_B,
+  p = 0.5
+)
+
+pageview_check
+click_check
+```
+
+Next, compare click-through probability between the groups:
+
+```{r}
+ctp_A <- clicks_A / pageviews_A
+ctp_B <- clicks_B / pageviews_B
+
+delta_ctp <- ctp_B - ctp_A
+
+c(
+  control_rate = ctp_A,
+  treatment_rate = ctp_B,
+  difference = delta_ctp
+)
+```
+
+```{r}
+ctp_test <- prop.test(
+  x = c(clicks_B, clicks_A),
+  n = c(pageviews_B, pageviews_A),
+  correct = FALSE
+)
+
+ctp_test
+```
+
+If pageviews, clicks, and click-through probability are similar between the groups, this supports the expected behavior of the random assignment before the treatment is shown.
 
 ## 5. Estimate and test the treatment effect
 
+Because cookies were randomly assigned to the original enrollment process or the screener, we can estimate the treatment effect by directly comparing outcomes between the two groups. Throughout the analysis:
+
+- A = control
+
+- B = treatment
+
+For each outcome, the treatment effect is defined as:
+
+$$\Delta = \text{Outcome}_B - \text{Outcome}_A$$
+
+A negative value of $\Delta$ means the metric is lower under the screener, while a positive value means the metric is higher under the screener.
+
+For the evaluation metrics, use only dates for which enrollment and payment outcomes are observed.
+
+```{r}
+n_A <- sum(control_eval$Clicks)
+n_B <- sum(treatment_eval$Clicks)
+
+enrollments_A <- sum(control_eval$Enrollments)
+enrollments_B <- sum(treatment_eval$Enrollments)
+
+payments_A <- sum(control_eval$Payments)
+payments_B <- sum(treatment_eval$Payments)
+```
+
+### 5.1 Gross conversion
+
+For gross conversion, let $p_A$ be the probability that a student in the control group enrolls after clicking Start Free Trial, and let $p_B$ be the corresponding probability for the treatment group.
+
+The treatment effect is
+
+$$\Delta_{GC} = p_B - p_A.$$
+
+Estimate the two probabilities and their difference:
+
+```{r}
+p_A_gc <- enrollments_A / n_A
+p_B_gc <- enrollments_B / n_B
+
+delta_gc <- p_B_gc - p_A_gc
+
+c(
+  control_rate = p_A_gc,
+  treatment_rate = p_B_gc,
+  treatment_effect = delta_gc
+)
+```
+
+The hypotheses are:
+
+$$H_0: p_B-p_A=0$$
+
+$$H_A: p_B-p_A\neq0$$
+
+Calculate the standard error:
+
+```{r}
+se_gc <- sqrt(
+  p_A_gc * (1 - p_A_gc) / n_A +
+    p_B_gc * (1 - p_B_gc) / n_B
+)
+
+se_gc
+```
+
+Construct an approximate 95% confidence interval:
+
+```{r}
+ci_gc <- delta_gc +
+  c(-1, 1) * qnorm(0.975) * se_gc
+
+ci_gc
+```
+
+Then perform the two-sample proportion test:
+
+```{r}
+test_gc <- prop.test(
+  x = c(enrollments_B, enrollments_A),
+  n = c(n_B, n_A),
+  correct = FALSE
+)
+
+test_gc
+```
+
+Here, the treatment group is entered first and the control group second so that the estimated difference corresponds to treatment minus control.
+
+The minimum practically important effect for gross conversion is 0.01. Therefore, in addition to determining whether the confidence interval contains zero, we will compare the interval with $\pm0.01$.
+
+### 5.2 Net conversion
+
+For net conversion, let $p_A$ be the probability that a student in the control group eventually makes a payment after clicking Start Free Trial, and let $p_B$ be the corresponding probability for the treatment group.
+
+The treatment effect is
+
+$$\Delta_{NC} = p_B-p_A.$$
+
+Estimate the two probabilities and their difference:
+
+```{r}
+p_A_nc <- payments_A / n_A
+p_B_nc <- payments_B / n_B
+
+delta_nc <- p_B_nc - p_A_nc
+
+c(
+  control_rate = p_A_nc,
+  treatment_rate = p_B_nc,
+  treatment_effect = delta_nc
+)
+```
+
+The hypotheses are:
+
+$$H_0: p_B-p_A=0$$
+
+$$H_A: p_B-p_A\neq0$$
+
+Calculate the standard error:
+
+```{r}
+se_nc <- sqrt(
+  p_A_nc * (1 - p_A_nc) / n_A +
+    p_B_nc * (1 - p_B_nc) / n_B
+)
+
+se_nc
+```
+
+Construct an approximate 95% confidence interval:
+
+```{r}
+ci_nc <- delta_nc +
+  c(-1, 1) * qnorm(0.975) * se_nc
+
+ci_nc
+```
+
+Then perform the two-sample proportion test:
+
+```{r}
+test_nc <- prop.test(
+  x = c(payments_B, payments_A),
+  n = c(n_B, n_A),
+  correct = FALSE
+)
+
+test_nc
+```
+
+The minimum practically important effect for net conversion is 0.0075. A decrease larger than 0.75 percentage points would therefore be practically important.
+
 ## 6. Interpret the results
 
+Now, summarizing the estimated treatment effects, confidence intervals, and p-values for the two evaluation metrics:
+
+```{r, echo = FALSE, warning=FALSE}
+results <- data.frame(
+  Metric = c(
+    "Gross conversion",
+    "Net conversion"
+  ),
+  Control = c(
+    p_A_gc,
+    p_A_nc
+  ),
+  Treatment = c(
+    p_B_gc,
+    p_B_nc
+  ),
+  Effect = c(
+    delta_gc,
+    delta_nc
+  ),
+  CI_lower = c(
+    ci_gc[1],
+    ci_nc[1]
+  ),
+  CI_upper = c(
+    ci_gc[2],
+    ci_nc[2]
+  ),
+  p_value = c(
+    test_gc$p.value,
+    test_nc$p.value
+  )
+)
+
+knitr::kable(
+  results,
+  digits = 4,
+  caption = "Estimated effects of adding the free-trial screener"
+)
+```
+
+### 6.1 Gross conversion
+
+The gross-conversion rate was approximately 21.89% for the control group and 19.83% for the treatment group.
+
+The estimated treatment effect was $\hat{\Delta}_{GC}=-0.0206$, meaning the screener decreased gross conversion by approximately **2.06 percentage points**.
+
+The approximate 95% confidence interval was (-0.0291, -0.0120), and the two-sample proportion test gave a p-value less than 0.001.
+
+Because the confidence interval does not contain zero, **there is statistical evidence that the screener decreases gross conversion**.
+
+The entire confidence interval is also below -0.01, the minimum practically important decrease. Therefore, the decrease is also **practically significant** according to the specified threshold.
+
+This suggests that the screener successfully reduced the number of students entering the free trial after clicking Start Free Trial.
+
+### 6.2 Net conversion
+
+The net-conversion rate was approximately 11.76% for the control group and 11.27% for the treatment group.
+
+The estimated treatment effect was $\hat{\Delta}_{NC}=-0.0049$, corresponding to a decrease of approximately **0.49 percentage points**.
+
+The approximate 95% confidence interval was (-0.0116, 0.0019), and the two-sample proportion test gave a p-value of approximately 0.156.
+
+Because the confidence interval contains zero and the p-value is greater than 0.05, **there is not sufficient evidence that the screener changes net conversion**.
+
+However, the confidence interval extends below -0.0075, the minimum practically important decrease. Therefore, the data do not rule out a decrease in net conversion that would be practically important.
+
+A non-significant result here should not be interpreted as evidence that the screener has no effect on payment.
+
+### Overall
+
+The two evaluation metrics tell different parts of the story:
+
+- There is strong evidence that the screener decreases gross conversion.
+
+- The decrease in gross conversion is large enough to be practically meaningful according to the specified threshold.
+
+- There is not sufficient evidence of a change in net conversion.
+
+- However, the uncertainty around net conversion is large enough that a practically important decrease cannot be ruled out.
+
+Therefore, the experiment shows that the screener successfully filters some students out of the free trial, but it does not provide strong enough evidence that this can be done without negatively affecting eventual payment.
+
 ## 7. Make a practical recommendation
+
+Based on the results of this experiment, I would **not recommend immediately launching the free-trial screener to all users**.
+
+The screener clearly reduced free-trial enrollment, which was one of the goals of the experiment. However, the more important question is whether this reduction can occur without meaningfully reducing eventual payment.
+
+For net conversion, the confidence interval contains both zero and values beyond the minimum practically important decrease of 0.75 percentage points. Therefore, the current experiment does not estimate the payment effect precisely enough to rule out a practically important negative effect.
+
+A reasonable next step would be to run a larger or longer experiment designed to estimate net conversion more precisely.
+
+The main takeaway is that **a non-significant difference in net conversion is not the same as demonstrating that the screener has no harmful effect**. More precision is needed before recommending a full launch.
