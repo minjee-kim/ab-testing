@@ -1,6 +1,5 @@
 # A/B Testing
-The goal of this mini project is to learn how to carry out an A/B testing. <br>
-My personal notes on related concepts and methods are available in [notes.md](https://github.com/minjee-kim/ab-testing/blob/main/notes.md). 
+Notes on related concepts and methods are available in [notes.md](https://github.com/minjee-kim/ab-testing/blob/main/notes.md). 
 
 
 ### Overview
