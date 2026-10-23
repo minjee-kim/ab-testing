@@ -2,3 +2,11 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# Local OS and Python artifacts
+.DS_Store
+**/.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+.ipynb_checkpoints/
